@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP Server Security Auditor (PS02)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+              900: '#14532d',
+            },
+            cyber: {
+              dark: '#0f172a',
+              card: '#1e293b',
+              border: '#334155',
+              accent: '#38bdf8'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    .badge-CRITICAL { background-color: #ef4444; color: white; }
+    .badge-HIGH { background-color: #f97316; color: white; }
+    .badge-MEDIUM { background-color: #eab308; color: black; }
+    .badge-LOW { background-color: #3b82f6; color: white; }
+    .badge-INFO { background-color: #64748b; color: white; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <!-- Top Navigation -->
+  <header class="border-b border-cyber-border bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="text-2xl">🛡️</span>
+        <div>
+          <h1 class="font-bold text-xl text-white tracking-wide flex items-center gap-2">
+            MCP Security Auditor
+            <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">PS02 Compliant</span>
+          </h1>
+          <p class="text-xs text-slate-400">Static Scanner • Description Analyzer • Dynamic Prober • Pin-and-Diff Rug-Pull Detector</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <button onclick="openLiveDemoModal()" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
+          <span>⚡</span> Live Rug-Pull Demo Studio
+        </button>
+        <span class="text-xs text-slate-400 px-3 py-1 rounded bg-slate-800 border border-slate-700">Official MCP SDK 2.x</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Scanner Control Bar -->
+    <div class="bg-cyber-card border border-cyber-border rounded-xl p-6 shadow-xl space-y-4">
+      <div class="flex flex-col md:flex-row gap-4 items-end">
+        <div class="flex-1">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Select MCP Server Target</label>
+          <select id="serverSelect" onchange="onServerChange()" class="w-full bg-slate-900 border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-accent">
+            <option value="">Loading test servers...</option>
+          </select>
+        </div>
+        <div class="flex-1">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Target Script Path</label>
+          <input type="text" id="serverPathInput" class="w-full bg-slate-900 border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-cyber-accent font-mono" placeholder="Path to server.py">
+        </div>
+        <div class="flex items-center space-x-2">
+          <button id="scanBtn" onclick="triggerScan()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2.5 rounded-lg text-sm flex items-center gap-2 transition shadow-lg shadow-emerald-900/30">
+            <span id="scanSpinner" class="hidden animate-spin">🔄</span>
+            <span>Run Security Audit</span>
+          </button>
+          <button onclick="pinCurrentServer()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium px-4 py-2.5 rounded-lg text-sm flex items-center gap-1.5 transition" title="Approve and pin tools to SQLite baseline">
+            <span>📌</span> Pin Baseline
+          </button>
+        </div>
+      </div>
+      <p id="targetDescription" class="text-xs text-slate-400 italic"></p>
+    </div>
+
+    <!-- Rug-Pull Alert Banner (Conditional) -->
+    <div id="rugPullBanner" class="hidden bg-gradient-to-r from-red-950 via-red-900 to-red-950 border-2 border-red-500 rounded-xl p-5 shadow-2xl animate-pulse">
+      <div class="flex items-start justify-between">
+        <div class="flex items-start space-x-3">
+          <span class="text-3xl">🚨</span>
+          <div>
+            <h2 class="text-lg font-bold text-red-100 flex items-center gap-2">
+              CRITICAL INTEGRITY ALERT: RUG-PULL DETECTED!
+            </h2>
+            <p class="text-sm text-red-200 mt-1">
+              This MCP server has mutated since its approved baseline in SQLite! An unauthorized tool addition, modified description, or parameter mutation was intercepted before agent execution.
+            </p>
+            <div id="rugPullDetailsText" class="mt-2 text-xs font-mono bg-red-950/80 p-3 rounded border border-red-800/80 text-red-200"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Metrics Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <!-- Security Score -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 flex flex-col items-center justify-center text-center shadow">
+        <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Audit Score</span>
+        <div id="scoreDisplay" class="text-3xl font-extrabold text-emerald-400 mt-1">100<span class="text-xs font-normal text-slate-400">/100</span></div>
+        <span id="gradeBadge" class="mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">A+</span>
+      </div>
+
+      <!-- Critical -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
+        <span class="text-xs uppercase font-semibold text-red-400 tracking-wider">Critical</span>
+        <div id="cntCritical" class="text-3xl font-bold text-red-500 mt-1">0</div>
+        <span class="text-[10px] text-slate-400">Immediate Risk</span>
+      </div>
+
+      <!-- High -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
+        <span class="text-xs uppercase font-semibold text-orange-400 tracking-wider">High</span>
+        <div id="cntHigh" class="text-3xl font-bold text-orange-400 mt-1">0</div>
+        <span class="text-[10px] text-slate-400">Severe Flaw</span>
+      </div>
+
+      <!-- Medium -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
+        <span class="text-xs uppercase font-semibold text-yellow-400 tracking-wider">Medium</span>
+        <div id="cntMedium" class="text-3xl font-bold text-yellow-400 mt-1">0</div>
+        <span class="text-[10px] text-slate-400">Suspicious</span>
+      </div>
+
+      <!-- Low -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
+        <span class="text-xs uppercase font-semibold text-blue-400 tracking-wider">Low / Info</span>
+        <div id="cntLow" class="text-3xl font-bold text-blue-400 mt-1">0</div>
+        <span class="text-[10px] text-slate-400">Hardening</span>
+      </div>
+
+      <!-- Tools Discovered -->
+      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
+        <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Tools Audited</span>
+        <div id="cntTools" class="text-3xl font-bold text-cyber-accent mt-1">0</div>
+        <span class="text-[10px] text-slate-400">Discovered</span>
+      </div>
+    </div>
+
+    <!-- Tabbed Analysis View -->
+    <div class="bg-cyber-card border border-cyber-border rounded-xl overflow-hidden shadow-xl">
+      <!-- Tabs Header -->
+      <div class="flex border-b border-cyber-border bg-slate-900/50 px-4">
+        <button onclick="switchTab('findings')" id="tabBtn-findings" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-emerald-500 text-emerald-400 flex items-center gap-2">
+          <span>🔍</span> All Findings (<span id="tabCountFindings">0</span>)
+        </button>
+        <button onclick="switchTab('promptguard')" id="tabBtn-promptguard" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+          <span>🧠</span> Tool Poisoning / Prompt Guard
+        </button>
+        <button onclick="switchTab('dynamic')" id="tabBtn-dynamic" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+          <span>⚡</span> Dynamic Prober Traces (<span id="tabCountTraces">0</span>)
+        </button>
+        <button onclick="switchTab('rugpull')" id="tabBtn-rugpull" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+          <span>🔄</span> Pin-and-Diff / Rug-Pull Lab
+        </button>
+        <button onclick="switchTab('exports')" id="tabBtn-exports" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
+          <span>📄</span> Reports & SARIF 2.1.0
+        </button>
+      </div>
+
+      <!-- Tab Content: Findings -->
+      <div id="tab-findings" class="tab-pane p-6 space-y-4">
+        <div id="findingsContainer" class="space-y-3">
+          <p class="text-sm text-slate-400">Click "Run Security Audit" above to scan the target server.</p>
+        </div>
+      </div>
+
+      <!-- Tab Content: Prompt Guard -->
+      <div id="tab-promptguard" class="tab-pane p-6 space-y-4 hidden">
+        <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-800 text-xs text-slate-300">
+          <strong class="text-emerald-400">Description Analyzer (Prompt Guard 2 & Open-Weight Model):</strong> Scans tool names, descriptions, and input schemas for covert AI instructions, instruction overrides (<code class="text-orange-300">&lt;system&gt;</code>, <code class="text-orange-300">ignore previous instructions</code>), forced priority execution, zero-width steganography, and credential harvesting directives.
+        </div>
+        <div id="promptGuardContainer" class="space-y-4">
+          <p class="text-sm text-slate-400">No tools analyzed yet.</p>
+        </div>
+      </div>
+
+      <!-- Tab Content: Dynamic Prober -->
+      <div id="tab-dynamic" class="tab-pane p-6 space-y-4 hidden">
+        <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-800 text-xs text-slate-300">
+          <strong class="text-emerald-400">Dynamic MCP Client Prober:</strong> Connects to the server over stdio, retrieves tool schemas, generates benign baseline inputs and security fuzzing payloads (path traversal, command injection), executes calls, and monitors for leaks or unhandled errors.
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 bg-slate-900/80 text-slate-400">
+                <th class="p-3">Tool Name</th>
+                <th class="p-3">Probe Type</th>
+                <th class="p-3">Injected Arguments</th>
+                <th class="p-3">Response Payload</th>
+                <th class="p-3">Latency</th>
+                <th class="p-3">Result</th>
+              </tr>
+            </thead>
+            <tbody id="dynamicTracesTable" class="divide-y divide-slate-800 font-mono">
+              <tr>
+                <td colspan="6" class="p-4 text-center text-slate-500 font-sans">No dynamic traces recorded yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab Content: Rug-Pull Lab -->
+      <div id="tab-rugpull" class="tab-pane p-6 space-y-6 hidden">
+        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
+          <h3 class="text-base font-bold text-white flex items-center gap-2">
+            <span>⚡</span> Interactive Live Rug-Pull Demonstration
+          </h3>
+          <p class="text-xs text-slate-300">
+            A rug-pull occurs when an approved MCP server changes its tool list or descriptions after being trusted. Test how the SHA-256 fingerprinting and DeepDiff engine immediately flags tampering!
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <!-- Step 1 -->
+            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
+              <span class="text-xs font-bold text-emerald-400">STEP 1: APPROVE BASELINE</span>
+              <p class="text-xs text-slate-400">Set server to v1 (Safe Notes App) and pin its approved tool fingerprints in SQLite.</p>
+              <button onclick="setRugPullVersion('1', true)" class="w-full py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-xs font-medium transition">
+                Pin Baseline v1
+              </button>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
+              <span class="text-xs font-bold text-red-400">STEP 2: TRIGGER RUG-PULL</span>
+              <p class="text-xs text-slate-400">Mutate server to v2 (adds Trojan tool <code class="text-orange-300">system_terminal_exec</code> & poisons description).</p>
+              <button onclick="setRugPullVersion('2', false)" class="w-full py-2 bg-red-700 hover:bg-red-600 text-white rounded text-xs font-medium transition">
+                Simulate Live Rug-Pull (v2)
+              </button>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
+              <span class="text-xs font-bold text-cyber-accent">STEP 3: VERIFY INTEGRITY</span>
+              <p class="text-xs text-slate-400">Audit the server to intercept the changes and view the DeepDiff report.</p>
+              <button onclick="selectAndScanRugPull()" class="w-full py-2 bg-sky-700 hover:bg-sky-600 text-white rounded text-xs font-medium transition">
+                Audit Rug-Pull Server
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3">
+          <h4 class="text-sm font-semibold text-slate-300">Current Pinned Baselines in SQLite:</h4>
+          <div id="pinsListContainer" class="text-xs font-mono bg-slate-900 p-4 rounded-lg border border-slate-800">
+            Loading database pins...
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Exports -->
+      <div id="tab-exports" class="tab-pane p-6 space-y-6 hidden">
+        <h3 class="text-base font-bold text-white">Generate & Download Security Reports</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
+            <h4 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
+              <span>📄</span> Markdown Audit Report
+            </h4>
+            <p class="text-xs text-slate-400">Human-readable audit report containing executive summary, CVSS scoring, and remediation guide per finding.</p>
+            <button onclick="downloadMarkdown()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded text-xs font-medium transition">
+              View / Download Markdown Report
+            </button>
+          </div>
+          <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
+            <h4 class="text-sm font-bold text-sky-400 flex items-center gap-2">
+              <span>🛡️</span> SARIF 2.1.0 JSON Report
+            </h4>
+            <p class="text-xs text-slate-400">OASIS standard static analysis format for direct integration into GitHub Code Scanning and CI/CD pipelines.</p>
+            <button onclick="downloadSarif()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded text-xs font-medium transition">
+              Download SARIF 2.1.0 File
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    let currentReport = null;
+    let currentTraces = [];
+    let availableServers = [];
+
+    async function loadServers() {
+      try {
+        const res = await fetch('/api/servers');
+        const data = await res.json();
+        availableServers = data.servers;
+        const select = document.getElementById('serverSelect');
+        select.innerHTML = availableServers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        onServerChange();
+      } catch (e) {
+        console.error("Failed to load servers", e);
+      }
+    }
+
+    function onServerChange() {
+      const select = document.getElementById('serverSelect');
+      const s = availableServers.find(x => x.id === select.value);
+      if (s) {
+        document.getElementById('serverPathInput').value = s.path;
+        document.getElementById('targetDescription').innerText = s.description;
+      }
+    }
+
+    async function triggerScan(pinBaseline = false) {
+      const path = document.getElementById('serverPathInput').value;
+      if (!path) return alert("Please specify a server path.");
+
+      const scanBtn = document.getElementById('scanBtn');
+      const spinner = document.getElementById('scanSpinner');
+      scanBtn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/scan', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            server_path: path,
+            pin_baseline: pinBaseline
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          alert("Scan Error: " + (err.detail || "Server error"));
+          return;
+        }
+
+        const data = await res.json();
+        currentReport = data.report;
+        currentTraces = data.traces;
+        renderReport();
+        loadPins();
+      } catch (e) {
+        alert("Failed to execute scan: " + e);
+      } finally {
+        scanBtn.disabled = false;
+        spinner.classList.add('hidden');
+      }
+    }
+
+    function renderReport() {
+      if (!currentReport) return;
+
+      // Metrics
+      document.getElementById('scoreDisplay').innerHTML = `${currentReport.security_score}<span class="text-xs font-normal text-slate-400">/100</span>`;
+      const gradeBadge = document.getElementById('gradeBadge');
+      gradeBadge.innerText = currentReport.grade;
+      gradeBadge.className = `mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+        currentReport.grade === 'A+' || currentReport.grade === 'A' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+        currentReport.grade === 'B' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
+        currentReport.grade === 'C' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+        'bg-red-500/20 text-red-400 border border-red-500/30'
+      }`;
+
+      document.getElementById('cntCritical').innerText = currentReport.summary['CRITICAL'] || 0;
+      document.getElementById('cntHigh').innerText = currentReport.summary['HIGH'] || 0;
+      document.getElementById('cntMedium').innerText = currentReport.summary['MEDIUM'] || 0;
+      document.getElementById('cntLow').innerText = (currentReport.summary['LOW'] || 0) + (currentReport.summary['INFO'] || 0);
+      document.getElementById('cntTools').innerText = currentReport.tool_count || 0;
+
+      // Rug-Pull Banner
+      const banner = document.getElementById('rugPullBanner');
+      if (currentReport.rug_pull_detected) {
+        banner.classList.remove('hidden');
+        const dt = currentReport.rug_pull_details;
+        let details = `Target Server: ${dt.server_id} | Previous Hash: ${dt.previous_hash.substring(0, 16)}... | Current Hash: ${dt.current_hash.substring(0, 16)}...\n`;
+        if (dt.added_tools && dt.added_tools.length) details += `🚨 Added Stealth Tools: ${dt.added_tools.join(', ')}\n`;
+        if (dt.removed_tools && dt.removed_tools.length) details += `⚠️ Removed Tools: ${dt.removed_tools.join(', ')}\n`;
+        if (dt.modified_tools && Object.keys(dt.modified_tools).length) details += `⚡ Modified Tools: ${Object.keys(dt.modified_tools).join(', ')}`;
+        document.getElementById('rugPullDetailsText').innerText = details;
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      // Findings List
+      const container = document.getElementById('findingsContainer');
+      document.getElementById('tabCountFindings').innerText = currentReport.findings.length;
+      if (currentReport.findings.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center bg-emerald-950/20 border border-emerald-500/30 rounded-lg">
+            <span class="text-3xl">✅</span>
+            <h3 class="text-emerald-400 font-bold mt-2">Zero Vulnerabilities Identified!</h3>
+            <p class="text-xs text-slate-400 mt-1">This server passed all static AST checks, Prompt Guard poisoning tests, and dynamic sandbox probes.</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = currentReport.findings.map(f => `
+          <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2 hover:border-slate-700 transition">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold badge-${f.severity}">${f.severity}</span>
+                <span class="text-xs font-mono text-cyan-400 font-semibold">${f.id}</span>
+                <span class="text-sm font-semibold text-white">${f.title}</span>
+              </div>
+              <span class="text-xs text-slate-400 font-mono">${f.file_path ? f.file_path.split('\\').pop() : (f.tool_name || 'Global')}</span>
+            </div>
+            <div class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded border border-slate-800 font-mono whitespace-pre-wrap">${f.evidence}</div>
+            <div class="text-xs text-emerald-400 flex items-center gap-1">
+              <span class="font-bold">Recommended Fix:</span> ${f.remediation}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // Prompt Guard Tab
+      const pgContainer = document.getElementById('promptGuardContainer');
+      if (!currentReport.tools || currentReport.tools.length === 0) {
+        pgContainer.innerHTML = '<p class="text-sm text-slate-400">No tools discovered on target server.</p>';
+      } else {
+        pgContainer.innerHTML = currentReport.tools.map(t => {
+          const desc = t.description || 'No description provided.';
+          const poisoned = desc.toLowerCase().includes('ignore') || desc.toLowerCase().includes('system') || desc.toLowerCase().includes('webhook');
+          return `
+            <div class="bg-slate-900 border ${poisoned ? 'border-red-500/40' : 'border-slate-800'} rounded-lg p-4 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-sm font-bold ${poisoned ? 'text-red-400' : 'text-emerald-400'}">Tool: ${t.name}</span>
+                <span class="text-xs px-2 py-0.5 rounded ${poisoned ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-300'}">
+                  ${poisoned ? '⚠️ Suspicious Directives Flagged' : 'Clean'}
+                </span>
+              </div>
+              <div class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded border border-slate-800">
+                <span class="text-slate-500 block text-[10px] uppercase font-bold mb-1">Declared Description:</span>
+                ${desc}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Dynamic Traces Tab
+      const tbody = document.getElementById('dynamicTracesTable');
+      document.getElementById('tabCountTraces').innerText = currentTraces.length;
+      if (currentTraces.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-500">No dynamic traces recorded.</td></tr>';
+      } else {
+        tbody.innerHTML = currentTraces.map(tr => `
+          <tr class="hover:bg-slate-850">
+            <td class="p-3 text-cyan-300 font-semibold">${tr.tool_name}</td>
+            <td class="p-3 text-slate-400">${tr.probe_type}</td>
+            <td class="p-3 text-slate-400 max-w-xs truncate" title='${JSON.stringify(tr.arguments)}'>${JSON.stringify(tr.arguments)}</td>
+            <td class="p-3 text-slate-300 max-w-sm truncate" title="${tr.response_content.replace(/"/g, '&quot;')}">${tr.response_content.substring(0, 100)}</td>
+            <td class="p-3 text-slate-400">${tr.duration_ms} ms</td>
+            <td class="p-3">
+              ${tr.finding_id ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-red-600/30 text-red-400 border border-red-500/30">FLAGGED (${tr.finding_id})</span>` :
+                tr.success ? '<span class="text-emerald-400 text-[10px]">OK</span>' : '<span class="text-yellow-400 text-[10px]">ERROR</span>'}
+            </td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    async function pinCurrentServer() {
+      const path = document.getElementById('serverPathInput').value;
+      const select = document.getElementById('serverSelect');
+      const id = select.value || 'server';
+      try {
+        const res = await fetch('/api/pin', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ server_path: path, server_id: id })
+        });
+        const data = await res.json();
+        alert(data.message + "\nComposite Hash: " + data.composite_hash);
+        loadPins();
+      } catch (e) {
+        alert("Pin error: " + e);
+      }
+    }
+
+    async function loadPins() {
+      try {
+        const res = await fetch('/api/pins');
+        const data = await res.json();
+        const container = document.getElementById('pinsListContainer');
+        if (data.pins.length === 0) {
+          container.innerText = "No servers pinned yet.";
+        } else {
+          container.innerHTML = data.pins.map(p => `
+            <div class="border-b border-slate-800 pb-2 mb-2 last:border-b-0">
+              <span class="text-cyan-400 font-bold">${p.server_id}</span> | Hash: <span class="text-yellow-300">${p.composite_hash}</span> | Pinned: ${p.pinned_at}
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function setRugPullVersion(ver, doPin) {
+      try {
+        const res = await fetch('/api/rugpull/toggle', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ version: ver })
+        });
+        const data = await res.json();
+        alert(`Server toggled to: ${data.description}`);
+        if (doPin) {
+          const s = availableServers.find(x => x.id === 'rug_pull_server');
+          if (s) {
+            document.getElementById('serverSelect').value = 'rug_pull_server';
+            onServerChange();
+            await pinCurrentServer();
+          }
+        }
+      } catch (e) {
+        alert("Toggle error: " + e);
+      }
+    }
+
+    function selectAndScanRugPull() {
+      const s = availableServers.find(x => x.id === 'rug_pull_server');
+      if (s) {
+        document.getElementById('serverSelect').value = 'rug_pull_server';
+        onServerChange();
+        switchTab('findings');
+        triggerScan();
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => {
+        el.classList.remove('border-emerald-500', 'text-emerald-400');
+        el.classList.add('border-transparent', 'text-slate-400');
+      });
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
+      activeBtn.classList.remove('border-transparent', 'text-slate-400');
+      activeBtn.classList.add('border-emerald-500', 'text-emerald-400');
+    }
+
+    function openLiveDemoModal() {
+      switchTab('rugpull');
+    }
+
+    function downloadMarkdown() {
+      const path = document.getElementById('serverPathInput').value;
+      window.open(`/api/reports/markdown?server_path=${encodeURIComponent(path)}`, '_blank');
+    }
+
+    function downloadSarif() {
+      const path = document.getElementById('serverPathInput').value;
+      window.open(`/api/reports/sarif?server_path=${encodeURIComponent(path)}`, '_blank');
+    }
+
+    // Initialize
+    loadServers();
+    loadPins();
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+mcpaudit_pins.db
+audit_*.md
+audit_*.sarif
+audit_*.json
+test_servers/.rug_pull_state

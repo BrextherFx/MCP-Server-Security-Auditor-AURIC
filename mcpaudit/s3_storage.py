@@ -7,6 +7,11 @@ import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
 
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
+
 class S3StorageManager:
     """Manages SQLite database backups and security report archives to AWS S3 bucket
 
@@ -22,6 +27,7 @@ class S3StorageManager:
         endpoint_url: Optional[str] = None,
         local_mock_dir: str = "s3_bucket_storage",
     ):
+        load_dotenv(override=True)
         self.bucket_name = (
             bucket_name
             or os.environ.get("AWS_S3_BUCKET")
@@ -33,8 +39,17 @@ class S3StorageManager:
             or os.environ.get("AWS_DEFAULT_REGION")
             or "us-east-1"
         )
-        self.access_key = aws_access_key_id or os.environ.get("AWS_ACCESS_KEY_ID")
-        self.secret_key = aws_secret_access_key or os.environ.get("AWS_SECRET_ACCESS_KEY")
+        raw_key = aws_access_key_id or os.environ.get("AWS_ACCESS_KEY_ID")
+        raw_secret = aws_secret_access_key or os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+        # Ignore placeholder values
+        if raw_key and any(ph in raw_key.lower() for ph in ["your_access_key", "your_aws", "placeholder", "xxx"]):
+            raw_key = None
+        if raw_secret and any(ph in raw_secret.lower() for ph in ["your_secret", "your_aws", "placeholder", "xxx"]):
+            raw_secret = None
+
+        self.access_key = raw_key
+        self.secret_key = raw_secret
         self.endpoint_url = endpoint_url or os.environ.get("AWS_S3_ENDPOINT_URL")
         self.local_mock_dir = Path(local_mock_dir)
         self._s3_client = None
@@ -52,12 +67,11 @@ class S3StorageManager:
                 kwargs["endpoint_url"] = self.endpoint_url
 
             client = boto3.client("s3", **kwargs)
-            # Test if credentials are valid by checking bucket existence or listing
             if self.access_key:
                 self._s3_client = client
                 self._is_live_aws = True
             else:
-                # Check if default environment credentials exist
+                # Check if default environment/instance profile credentials exist
                 try:
                     client.head_bucket(Bucket=self.bucket_name)
                     self._s3_client = client

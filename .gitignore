@@ -10,3 +10,4 @@ audit_*.json
 audit_*.html
 test_servers/.rug_pull_state
 s3_bucket_storage/
+.env

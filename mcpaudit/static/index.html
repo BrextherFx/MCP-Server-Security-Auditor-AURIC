@@ -766,7 +766,12 @@
     function downloadReport(format) {
       const path = document.getElementById('serverPathInput').value;
       if (!path) return alert("Please select or specify a target server path first.");
-      window.location.href = `/api/reports/download/${format}?server_path=${encodeURIComponent(path)}`;
+      const a = document.createElement('a');
+      a.href = `/api/reports/download/${format}?server_path=${encodeURIComponent(path)}`;
+      a.setAttribute('download', '');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
 
     function previewReport(format) {
@@ -880,6 +885,7 @@
       const path = document.getElementById('serverPathInput').value;
       const select = document.getElementById('serverSelect');
       const id = select.value || 'server';
+      const bucket = document.getElementById('s3BucketInput')?.value;
       if (!path) return alert("Please select or specify a target server path first.");
 
       try {
@@ -890,7 +896,8 @@
           body: JSON.stringify({
             server_path: path,
             server_id: id,
-            use_lm_studio: false
+            use_lm_studio: false,
+            bucket: bucket || null
           })
         });
         const data = await res.json();
@@ -951,7 +958,9 @@
     async function loadS3ReportsList() {
       try {
         const tbody = document.getElementById('s3ReportsTableBody');
-        const res = await fetch('/api/s3/reports');
+        const bucket = document.getElementById('s3BucketInput')?.value;
+        const url = bucket ? `/api/s3/reports?bucket=${encodeURIComponent(bucket)}` : '/api/s3/reports';
+        const res = await fetch(url);
         const data = await res.json();
         if (!data.reports || data.reports.length === 0) {
           tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-500">No archived reports in S3 bucket yet.</td></tr>';

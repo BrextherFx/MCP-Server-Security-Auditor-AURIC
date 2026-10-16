@@ -155,6 +155,10 @@ mcpaudit scan test_servers/clean_math_server.py --s3-sync --s3-bucket my-auditor
 
 ## ☁️ AWS S3 Cloud Storage & SQLite Synchronization
 
+> [!NOTE]
+> 📖 **Need help creating an S3 bucket or getting IAM Access Keys?**
+> Follow the complete step-by-step tutorial in [**`AWS_SETUP_GUIDE.md`**](file:///C:/Users/thril/Desktop/Hackthon/AWS_SETUP_GUIDE.md).
+
 MCPAudit features an integrated cloud persistence engine combining local low-latency SQLite with durable cloud backups:
 
 - **Local SQLite Database (`mcpaudit_pins.db`)**: Stores canonical tool SHA-256 fingerprints, baseline approvals, and complete audit history (`scan_history`).

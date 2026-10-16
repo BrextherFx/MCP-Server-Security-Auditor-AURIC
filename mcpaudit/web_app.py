@@ -32,6 +32,7 @@ class ScanRequest(BaseModel):
     pin_baseline: bool = False
     use_lm_studio: bool = True
     lm_studio_url: str = "http://localhost:1234/v1"
+    bucket: Optional[str] = None
 
 
 class PinRequest(BaseModel):
@@ -242,8 +243,9 @@ def pull_sqlite_from_s3(bucket: Optional[str] = None):
 
 
 @app.get("/api/s3/reports")
-def list_s3_reports():
-    return {"reports": s3_manager.list_archived_reports()}
+def list_s3_reports(bucket: Optional[str] = None):
+    mgr = S3StorageManager(bucket_name=bucket) if bucket else S3StorageManager()
+    return {"reports": mgr.list_archived_reports()}
 
 
 @app.get("/api/history")
@@ -258,6 +260,7 @@ async def archive_report_to_s3(req: ScanRequest):
     if not path.exists():
         raise HTTPException(status_code=404, detail="Server not found.")
 
+    mgr = S3StorageManager(bucket_name=req.bucket) if req.bucket else S3StorageManager()
     res = await run_scan(req)
     report = ScanReport(**res["report"])
     engine = ReportEngine()
@@ -267,9 +270,9 @@ async def archive_report_to_s3(req: ScanRequest):
     sarif = engine.generate_sarif(report)
     html = engine.generate_html(report)
 
-    up_md = s3_manager.upload_report_to_s3(md, "audit_report.md", eff_id, "text/markdown")
-    up_sarif = s3_manager.upload_report_to_s3(json.dumps(sarif, indent=2), "audit_report.sarif", eff_id, "application/sarif+json")
-    up_html = s3_manager.upload_report_to_s3(html, "audit_report.html", eff_id, "text/html")
+    up_md = mgr.upload_report_to_s3(md, "audit_report.md", eff_id, "text/markdown")
+    up_sarif = mgr.upload_report_to_s3(json.dumps(sarif, indent=2), "audit_report.sarif", eff_id, "application/sarif+json")
+    up_html = mgr.upload_report_to_s3(html, "audit_report.html", eff_id, "text/html")
 
     return {
         "success": True,

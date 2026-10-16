@@ -236,3 +236,32 @@ Run the full automated test suite covering static AST, Prompt Guard 2, dynamic M
 .venv\Scripts\pytest -v
 ```
 *(All 27 test cases pass with 100% success rate)*
+
+---
+
+## 📄 Open Source License & Terms
+
+This project is open-source software licensed under the **[MIT License](LICENSE)**.
+
+```
+MIT License
+Copyright (c) 2026 MCP Security Auditor Contributors
+```
+
+The MIT License is an official **[OSI-Approved License](https://opensource.org/licenses/MIT)** that grants anyone the freedom to:
+- **Commercial Use**: Incorporate into proprietary products, enterprise CI/CD pipelines, and cloud services.
+- **Modification**: Freely modify the codebase, extend AST scanners, customize prompt guard rules, and add dynamic probe payloads.
+- **Distribution**: Distribute copies, forks, packaged binaries, and Docker images.
+- **Private Use**: Run internal audits and security compliance benchmarks privately within your organization.
+
+See the complete terms in the [LICENSE](LICENSE) file.
+
+---
+
+## 🤝 Contributing & Community
+
+We welcome contributions from the security and AI engineering community! Whether you are adding new AST static rules, enhancing Prompt Guard vectors, contributing dynamic probes, or improving the Web UI:
+- Check out our **[Contribution Guidelines](CONTRIBUTING.md)** for developer setup and PR guidelines.
+- Read our **[Code of Conduct](CODE_OF_CONDUCT.md)** to foster an inclusive, respectful environment.
+- For vulnerability reports regarding this auditor itself, please review our **[Security Policy](SECURITY.md)**.
+

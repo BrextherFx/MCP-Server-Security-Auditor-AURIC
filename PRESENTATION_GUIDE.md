@@ -110,13 +110,14 @@ When judges or evaluators ask: *"Where does the MCP server run and how do you pr
   - Python AST visitor inspecting `ast.Call` nodes.
   - Zero-execution detection of `os.system`, `subprocess(shell=True)`, `eval`, and `pickle.loads`.
   - Gitleaks-style entropy scanner catching AWS, OpenAI, and GitHub tokens.
+  - **LM Studio Local LLM Code Reviewer (`http://localhost:1234/v1`)**: Connects to locally loaded open-weight models (e.g., `qwen2.5-3b-instruct`) for deep semantic backdoor and vulnerability detection with 100% on-device privacy.
 - **Description Analyzer Highlights**:
   - Flags `<system>` tag delimiter injection and instruction overrides.
   - Catches covert execution directives (*"do not inform user"*).
   - Detects invisible zero-width unicode steganography (`\u200b`).
-  - Open-weight model integration via Ollama (Qwen2.5/Prompt Guard).
+  - Dual Open-weight model integration via LM Studio & Ollama.
 - **Presenter Notes**:
-  > *"Our static scanner uses abstract syntax trees so attackers cannot hide behind string formatting. Our description analyzer looks for prompt injection patterns and invisible zero-width characters that humans cannot see with the naked eye."*
+  > *"Our static scanner combines deterministic AST checks with local LLM code review powered by LM Studio. This means an on-device Qwen model reads the code alongside our AST visitor, finding subtle logic flaws without leaking proprietary source code to cloud APIs."*
 
 ---
 

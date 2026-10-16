@@ -222,12 +222,121 @@ class ReportEngine:
         }
         return sarif_doc
 
+    def generate_html(self, report: ScanReport) -> str:
+        """Generates an executive, printable HTML security report."""
+        report.calculate_score()
+        summary = report.summary or {}
+
+        findings_html = ""
+        if not report.findings:
+            findings_html = '<div style="background:#052e16;border:1px solid #16a34a;padding:20px;border-radius:8px;color:#4ade80;"><strong>✅ Clean Server:</strong> Zero security vulnerabilities identified.</div>'
+        else:
+            for idx, f in enumerate(report.findings, 1):
+                sev_color = {
+                    Severity.CRITICAL: "#ef4444",
+                    Severity.HIGH: "#f97316",
+                    Severity.MEDIUM: "#eab308",
+                    Severity.LOW: "#3b82f6",
+                    Severity.INFO: "#64748b",
+                }.get(f.severity, "#94a3b8")
+
+                loc = f.file_path or f.tool_name or "Global"
+                if f.line_number:
+                    loc += f" (Line {f.line_number})"
+
+                findings_html += f"""
+                <div style="background:#1e293b;border:1px solid #334155;border-left:4px solid {sev_color};padding:16px;margin-bottom:14px;border-radius:6px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                        <div>
+                            <span style="background:{sev_color};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;">{f.severity.value}</span>
+                            <span style="color:#38bdf8;font-family:monospace;font-size:12px;margin-left:8px;">{f.id}</span>
+                            <span style="font-weight:bold;color:#f8fafc;margin-left:8px;">{f.title}</span>
+                        </div>
+                        <span style="color:#94a3b8;font-size:11px;font-family:monospace;">{loc}</span>
+                    </div>
+                    <div style="background:#0f172a;border:1px solid #1e293b;padding:10px;border-radius:4px;font-family:monospace;font-size:12px;color:#cbd5e1;white-space:pre-wrap;margin-bottom:8px;">{f.evidence}</div>
+                    <div style="color:#4ade80;font-size:12px;"><strong>Remediation:</strong> {f.remediation}</div>
+                </div>
+                """
+
+        rug_pull_alert = ""
+        if report.rug_pull_detected:
+            rug_pull_alert = """
+            <div style="background:#450a0a;border:2px solid #ef4444;padding:16px;border-radius:8px;margin-bottom:20px;color:#fecaca;">
+                <h3 style="margin:0 0 6px 0;color:#f87171;">🚨 CRITICAL INTEGRITY BREACH: RUG PULL DETECTED!</h3>
+                <p style="margin:0;font-size:13px;">This server mutated after baseline approval. Stealth tools, modified tool descriptions, or parameter schema changes were intercepted.</p>
+            </div>
+            """
+
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>MCP Security Audit - {report.target}</title>
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b1120; color: #f8fafc; margin: 0; padding: 40px; }}
+        .card {{ background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 24px; margin-bottom: 24px; }}
+        table {{ width: 100%; border-collapse: collapse; margin-top: 10px; }}
+        th, td {{ padding: 10px 14px; text-align: left; border-bottom: 1px solid #334155; font-size: 13px; }}
+        th {{ background: #0f172a; color: #94a3b8; }}
+        @media print {{
+            body {{ background: #fff; color: #000; padding: 10px; }}
+            .card {{ border: 1px solid #ccc; background: #fff; color: #000; }}
+        }}
+    </style>
+</head>
+<body>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:1px solid #334155;padding-bottom:16px;">
+        <div>
+            <h1 style="margin:0;font-size:24px;color:#fff;">🛡️ MCP Server Security Audit Report</h1>
+            <p style="margin:4px 0 0 0;font-size:13px;color:#94a3b8;">Target: <code>{report.target}</code> | Audited: {report.scanned_at}</p>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:28px;font-weight:bold;color:#4ade80;">{report.security_score}<span style="font-size:14px;color:#94a3b8;">/100</span></div>
+            <div style="font-size:12px;color:#94a3b8;">Security Grade: <strong style="color:#4ade80;">{report.grade}</strong></div>
+        </div>
+    </div>
+
+    {rug_pull_alert}
+
+    <div class="card">
+        <h2 style="margin-top:0;font-size:16px;color:#f8fafc;">Executive Summary</h2>
+        <table>
+            <tr><th>Metric</th><th>Value</th><th>Metric</th><th>Value</th></tr>
+            <tr>
+                <td><strong>Critical Vulnerabilities</strong></td><td style="color:#ef4444;font-weight:bold;">{summary.get('CRITICAL', 0)}</td>
+                <td><strong>Total Tools Discovered</strong></td><td>{report.tool_count}</td>
+            </tr>
+            <tr>
+                <td><strong>High Risk Flaws</strong></td><td style="color:#f97316;font-weight:bold;">{summary.get('HIGH', 0)}</td>
+                <td><strong>Integrity Status</strong></td><td>{'🚨 Compromised (Rug Pull)' if report.rug_pull_detected else '✅ Verified (Clean)'}</td>
+            </tr>
+            <tr>
+                <td><strong>Medium Warnings</strong></td><td style="color:#eab308;font-weight:bold;">{summary.get('MEDIUM', 0)}</td>
+                <td><strong>Low / Info Findings</strong></td><td>{summary.get('LOW', 0) + summary.get('INFO', 0)}</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2 style="margin-top:0;font-size:16px;color:#f8fafc;">Detailed Security Findings ({len(report.findings)})</h2>
+        {findings_html}
+    </div>
+
+    <div style="text-align:center;font-size:11px;color:#64748b;margin-top:40px;">
+        Generated by MCP Server Security Auditor (PS02) • Confidential Security Audit Report
+    </div>
+</body>
+</html>"""
+        return html
+
     def save_reports(
         self,
         report: ScanReport,
         markdown_path: Optional[str] = None,
         sarif_path: Optional[str] = None,
         json_path: Optional[str] = None,
+        html_path: Optional[str] = None,
     ):
         if markdown_path:
             Path(markdown_path).write_text(self.generate_markdown(report), encoding="utf-8")
@@ -236,3 +345,5 @@ class ReportEngine:
             Path(sarif_path).write_text(json.dumps(sarif, indent=2), encoding="utf-8")
         if json_path:
             Path(json_path).write_text(report.model_dump_json(indent=2), encoding="utf-8")
+        if html_path:
+            Path(html_path).write_text(self.generate_html(report), encoding="utf-8")

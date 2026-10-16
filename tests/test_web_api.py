@@ -37,3 +37,46 @@ def test_api_rug_pull_toggle():
 
     # Reset
     client.post("/api/rugpull/toggle", json={"version": "1"})
+
+def test_api_s3_status():
+    res = client.get("/api/s3/status")
+    assert res.status_code == 200
+    data = res.json()
+    assert "bucket_name" in data
+    assert "mode" in data
+
+def test_api_s3_sync_and_pull():
+    res_sync = client.post("/api/s3/sync-db")
+    assert res_sync.status_code == 200
+    assert res_sync.json().get("success") is True
+
+    res_pull = client.post("/api/s3/pull-db")
+    assert res_pull.status_code == 200
+    assert res_pull.json().get("success") is True
+
+def test_api_scan_history():
+    res = client.get("/api/history")
+    assert res.status_code == 200
+    data = res.json()
+    assert "history" in data
+    assert isinstance(data["history"], list)
+
+def test_api_report_downloads():
+    clean_path = str(Path("test_servers/clean_math_server.py").resolve())
+    for fmt in ["html", "sarif", "markdown", "json"]:
+        res = client.get(f"/api/reports/download/{fmt}?server_path={clean_path}")
+        assert res.status_code == 200
+        assert "attachment" in res.headers.get("content-disposition", "")
+
+def test_api_s3_archive_report():
+    clean_path = str(Path("test_servers/clean_math_server.py").resolve())
+    res = client.post("/api/s3/archive-report", json={
+        "server_path": clean_path,
+        "server_id": "clean_math_test",
+        "use_lm_studio": False
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert data.get("success") is True
+    assert "s3://" in data.get("html_uri", "")
+

@@ -152,16 +152,20 @@ When judges or evaluators ask: *"Where does the MCP server run and how do you pr
 
 ---
 
-### Slide 7: Enterprise Integration & Dual User Interface
-- **Header**: Built for Developers and Security Teams
+### Slide 7: Enterprise Integration, AWS S3 Cloud & Dual Interface
+- **Header**: Built for Developers, Enterprise Security & Cloud Scale
 - **Dual Interface**:
   - **Developer CLI**: Fast Typer terminal commands (`mcpaudit scan`, `pin`, `diff`, `demo`).
   - **Interactive Web Studio**: FastAPI + modern dark-mode dashboard with live telemetry and 1-click Rug-Pull Studio.
-- **Enterprise Standards**:
-  - **OASIS SARIF 2.1.0**: Native compatibility with GitHub Code Scanning alerts and GitLab CI.
-  - **Markdown & JSON**: Detailed reports with actionable remediation advice per finding.
+- **AWS S3 Cloud Database & Report Archival**:
+  - **Local SQLite + AWS S3 Sync**: Combines instant microsecond SQLite lookups with centralized AWS S3 bucket storage for multi-agent baselines and compliance history.
+  - **Zero-Credential Simulation Fallback**: Auto-detects AWS IAM keys; if offline or uncredentialed, runs transparent local emulation so demos never fail.
+- **Multi-Format Security Reports**:
+  - **Executive HTML Report**: High-contrast, printable, C-suite presentation layout with score gauges and remediation plans.
+  - **OASIS SARIF 2.1.0**: Standardized format for automated GitHub Code Scanning gates and PR blocking.
+  - **Markdown & JSON**: Direct 1-click downloads for developer documentation and SIEM ingestion.
 - **Presenter Notes**:
-  > *"MCPAudit fits existing security workflows. It runs as a developer CLI tool and exports standard SARIF 2.1.0 files to block insecure MCP servers directly in your GitHub CI/CD pipeline."*
+  > *"MCPAudit fits enterprise workflows seamlessly. It stores pinned baselines locally in SQLite for zero-latency execution, while synchronizing with AWS S3 buckets for cloud audit history and report storage. It produces 4 export formats including executive HTML and OASIS SARIF 2.1.0 for GitHub CI/CD blocking."*
 
 ---
 
@@ -169,13 +173,16 @@ When judges or evaluators ask: *"Where does the MCP server run and how do you pr
 - **Header**: Summary & Impact
 - **Accomplishments**:
   - 100% compliant with PS02 requirements.
-  - 15/15 unit and integration tests passing in under 5 seconds.
-  - Proven live rug-pull interception mid-demo.
+  - 21/21 automated unit and integration tests passing.
+  - Proven live rug-pull interception mid-demo with DeepDiff.
+  - Local LLM code analysis integration via LM Studio (`qwen2.5-3b-instruct`).
+  - AWS S3 bucket synchronization with local simulation fallback.
 - **Call to Action**:
   - Try the CLI: `mcpaudit demo`
   - Try the Web Studio: `mcpaudit serve --port 8000`
+  - Download SARIF & HTML reports with 1 click.
 - **Presenter Notes**:
-  > *"In conclusion, MCPAudit ensures that agents can safely expand their capabilities with community tools without risking tool poisoning, code execution, or rug pulls. Thank you, and we'd love to take your questions."*
+  > *"In conclusion, MCPAudit ensures that AI agents can safely expand their capabilities with community tools without risking tool poisoning, code execution, or post-approval rug pulls. Thank you, and we'd love to take your questions."*
 
 ---
 
@@ -189,3 +196,10 @@ When judges or evaluators ask: *"Where does the MCP server run and how do you pr
 
 3. **Q: What happens if an MCP server is written in TypeScript instead of Python?**
    - **Answer**: *"Our static scanner includes dedicated JavaScript/TypeScript regex detectors for `child_process.exec`, `eval()`, and `new Function()`. More importantly, the MCP protocol itself is language-agnostic JSON-RPC over stdio — meaning our Dynamic Prober and Pin-and-Diff Rug-Pull detector work identically against Python, Node.js, Go, or Rust MCP servers."*
+
+4. **Q: Why use local SQLite with AWS S3 synchronization instead of just a remote cloud database?**
+   - **Answer**: *"MCP security checks must happen in microseconds inside developer machines and CI containers without network latency or internet dependencies. Local SQLite provides instant SHA-256 fingerprint verification. The AWS S3 sync engine provides centralized multi-machine baseline distribution and permanent compliance audit report archiving without adding latency to agent tool execution."*
+
+5. **Q: How does the local LLM code analysis (LM Studio) complement the AST scanner?**
+   - **Answer**: *"AST visitors excel at finding concrete syntax patterns like `os.system` or `pickle.loads`. However, subtle backdoors often hide behind complex logic or dynamic attribute calls. Connecting locally to open-weight models like Qwen2.5 via LM Studio enables deep semantic reasoning about intent without leaking proprietary code to third-party cloud APIs."*
+

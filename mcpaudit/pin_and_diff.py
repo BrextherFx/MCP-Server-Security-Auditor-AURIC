@@ -79,7 +79,85 @@ class PinStore:
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scan_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    server_id TEXT NOT NULL,
+                    target_path TEXT NOT NULL,
+                    security_score INTEGER NOT NULL,
+                    grade TEXT NOT NULL,
+                    tool_count INTEGER NOT NULL,
+                    findings_count INTEGER NOT NULL,
+                    critical_count INTEGER NOT NULL,
+                    high_count INTEGER NOT NULL,
+                    medium_count INTEGER NOT NULL,
+                    low_count INTEGER NOT NULL,
+                    rug_pull_detected INTEGER NOT NULL,
+                    report_json TEXT,
+                    s3_uri TEXT,
+                    scanned_at TEXT NOT NULL
+                )
+                """
+            )
             conn.commit()
+
+    def record_scan(
+        self,
+        report: Any,
+        server_id: str,
+        s3_uri: Optional[str] = None,
+    ) -> int:
+        """Records a completed security scan into SQLite database."""
+        report.calculate_score()
+        summary = report.summary or {}
+        scanned_at = report.scanned_at or datetime.now(timezone.utc).isoformat()
+        report_json = report.model_dump_json()
+
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO scan_history (
+                    server_id, target_path, security_score, grade, tool_count,
+                    findings_count, critical_count, high_count, medium_count, low_count,
+                    rug_pull_detected, report_json, s3_uri, scanned_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    server_id,
+                    report.target,
+                    report.security_score,
+                    report.grade,
+                    report.tool_count,
+                    len(report.findings),
+                    summary.get("CRITICAL", 0),
+                    summary.get("HIGH", 0),
+                    summary.get("MEDIUM", 0),
+                    summary.get("LOW", 0) + summary.get("INFO", 0),
+                    1 if report.rug_pull_detected else 0,
+                    report_json,
+                    s3_uri,
+                    scanned_at,
+                ),
+            )
+            return cursor.lastrowid or 0
+
+    def get_scan_history(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Retrieves past scan records from the SQLite database."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT id, server_id, target_path, security_score, grade, tool_count,
+                       findings_count, critical_count, high_count, medium_count, low_count,
+                       rug_pull_detected, s3_uri, scanned_at
+                FROM scan_history
+                ORDER BY id DESC LIMIT ?
+                """,
+                (limit,),
+            )
+            return [dict(r) for r in cursor.fetchall()]
 
     def pin_server(
         self,

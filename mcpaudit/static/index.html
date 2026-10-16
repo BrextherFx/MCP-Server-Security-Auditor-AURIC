@@ -56,6 +56,10 @@
           <span id="lmStudioDot" class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
           <span id="lmStudioText">LM Studio: Checking...</span>
         </span>
+        <span id="s3StatusBadge" class="text-xs bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 rounded-full font-mono flex items-center gap-1.5" title="AWS S3 Bucket & SQLite Cloud Storage">
+          <span id="s3Dot" class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
+          <span id="s3Text">S3: Checking...</span>
+        </span>
         <button onclick="openLiveDemoModal()" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
           <span>⚡</span> Live Rug-Pull Demo Studio
         </button>
@@ -180,7 +184,7 @@
           <span>🔄</span> Pin-and-Diff / Rug-Pull Lab
         </button>
         <button onclick="switchTab('exports')" id="tabBtn-exports" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
-          <span>📄</span> Reports & SARIF 2.1.0
+          <span>☁️</span> Reports & S3 Cloud Sync
         </button>
       </div>
 
@@ -275,27 +279,214 @@
         </div>
       </div>
 
-      <!-- Tab Content: Exports -->
-      <div id="tab-exports" class="tab-pane p-6 space-y-6 hidden">
-        <h3 class="text-base font-bold text-white">Generate & Download Security Reports</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
-            <h4 class="text-sm font-bold text-emerald-400 flex items-center gap-2">
-              <span>📄</span> Markdown Audit Report
-            </h4>
-            <p class="text-xs text-slate-400">Human-readable audit report containing executive summary, CVSS scoring, and remediation guide per finding.</p>
-            <button onclick="downloadMarkdown()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded text-xs font-medium transition">
-              View / Download Markdown Report
+      <!-- Tab Content: Exports & S3 Cloud Sync -->
+      <div id="tab-exports" class="tab-pane p-6 space-y-8 hidden">
+        <!-- Part 1: Download Security Reports -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <span>📄</span> Export & Download Security Audit Reports
+              </h3>
+              <p class="text-xs text-slate-400">Download comprehensive audit reports in executive, developer, or machine-readable compliance formats.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- HTML Executive Presentation Report -->
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-emerald-500/40 transition">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-2xl">📑</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Executive HTML</span>
+                </div>
+                <h4 class="text-sm font-bold text-white mt-2">Executive Presentation</h4>
+                <p class="text-xs text-slate-400 mt-1">Full-color executive report with vulnerability cards, score gauges, and print-ready CSS layout.</p>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 space-y-2">
+                <button onclick="downloadReport('html')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
+                  <span>⬇️</span> Download .HTML
+                </button>
+                <button onclick="previewReport('html')" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
+                  <span>👁️</span> Preview in Browser
+                </button>
+              </div>
+            </div>
+
+            <!-- SARIF 2.1.0 Oasis Report -->
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-sky-500/40 transition">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-2xl">🛡️</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">SARIF 2.1.0</span>
+                </div>
+                <h4 class="text-sm font-bold text-white mt-2">OASIS SARIF Benchmark</h4>
+                <p class="text-xs text-slate-400 mt-1">Standardized static analysis format for GitHub Code Scanning, SonarQube, and CI/CD automated gates.</p>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 space-y-2">
+                <button onclick="downloadReport('sarif')" class="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
+                  <span>⬇️</span> Download .SARIF
+                </button>
+                <button onclick="previewReport('sarif')" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
+                  <span>👁️</span> View SARIF JSON
+                </button>
+              </div>
+            </div>
+
+            <!-- Markdown Audit Report -->
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-amber-500/40 transition">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-2xl">📝</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Markdown .MD</span>
+                </div>
+                <h4 class="text-sm font-bold text-white mt-2">Markdown Audit</h4>
+                <p class="text-xs text-slate-400 mt-1">Developer-friendly Markdown document detailing CVSS scoring, finding evidence, and remediation steps.</p>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 space-y-2">
+                <button onclick="downloadReport('markdown')" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
+                  <span>⬇️</span> Download .MD
+                </button>
+                <button onclick="previewReport('markdown')" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
+                  <span>👁️</span> View Markdown
+                </button>
+              </div>
+            </div>
+
+            <!-- Raw JSON Telemetry -->
+            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-purple-500/40 transition">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="text-2xl">⚙️</span>
+                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">Schema JSON</span>
+                </div>
+                <h4 class="text-sm font-bold text-white mt-2">Raw JSON Telemetry</h4>
+                <p class="text-xs text-slate-400 mt-1">Complete structured scan payload with tool schemas, AST node details, and dynamic trace results.</p>
+              </div>
+              <div class="pt-3 border-t border-slate-800/80 space-y-2">
+                <button onclick="downloadReport('json')" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
+                  <span>⬇️</span> Download .JSON
+                </button>
+                <button onclick="copyReportJson()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
+                  <span>📋</span> Copy to Clipboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 2: AWS S3 Cloud Database & Storage Manager -->
+        <div class="bg-slate-900/90 border border-cyber-border rounded-xl p-6 shadow-xl space-y-5">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xl">☁️</span>
+                <h3 class="text-base font-bold text-white">AWS S3 Cloud Database & Report Archival</h3>
+              </div>
+              <p class="text-xs text-slate-400 mt-0.5">Bidirectional synchronization of SQLite pins (<code class="text-yellow-300">mcpaudit_pins.db</code>) and automated report archiving to AWS S3 bucket storage.</p>
+            </div>
+            <div id="s3ModeBadge" class="text-xs px-3 py-1 rounded-full font-mono font-medium border bg-amber-500/10 text-amber-300 border-amber-500/30 flex items-center gap-2">
+              <span id="s3StatusIndicator" class="w-2 h-2 rounded-full bg-amber-400"></span>
+              <span id="s3ModeText">Checking S3...</span>
+            </div>
+          </div>
+
+          <!-- Configuration & Status Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-1.5">
+              <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Target S3 Bucket</label>
+              <div class="flex gap-2">
+                <input id="s3BucketInput" type="text" value="mcp-security-auditor-bucket" class="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400">
+                <button onclick="refreshS3Status()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-200 transition" title="Apply Bucket">
+                  🔄
+                </button>
+              </div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-1">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">AWS Region & Storage Mode</span>
+              <div class="text-xs text-white font-mono" id="s3RegionText">us-east-1</div>
+              <div class="text-[11px] text-slate-400 truncate" id="s3PathText">s3_bucket_storage/mcp-security-auditor-bucket</div>
+            </div>
+
+            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-1">
+              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Local SQLite Database</span>
+              <div class="text-xs text-emerald-400 font-mono">mcpaudit_pins.db</div>
+              <div class="text-[11px] text-slate-400">Tables: <code class="text-slate-300">server_pins</code>, <code class="text-slate-300">scan_history</code>, <code class="text-slate-300">audit_events</code></div>
+            </div>
+          </div>
+
+          <!-- Sync Action Buttons -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <button onclick="syncSQLiteToS3()" class="py-2.5 px-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-amber-950/40">
+              <span>☁️</span> Sync SQLite Database to S3
+            </button>
+            <button onclick="pullSQLiteFromS3()" class="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-2">
+              <span>📥</span> Restore SQLite Database from S3
+            </button>
+            <button onclick="archiveCurrentReportToS3()" class="py-2.5 px-4 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40">
+              <span>📦</span> Archive Current Report to S3
             </button>
           </div>
-          <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3">
-            <h4 class="text-sm font-bold text-sky-400 flex items-center gap-2">
-              <span>🛡️</span> SARIF 2.1.0 JSON Report
-            </h4>
-            <p class="text-xs text-slate-400">OASIS standard static analysis format for direct integration into GitHub Code Scanning and CI/CD pipelines.</p>
-            <button onclick="downloadSarif()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded text-xs font-medium transition">
-              Download SARIF 2.1.0 File
-            </button>
+
+          <!-- Action Feedback Alert Box -->
+          <div id="s3ActionAlert" class="hidden text-xs font-mono p-3 rounded border"></div>
+        </div>
+
+        <!-- Part 3: SQLite Scan History & S3 Archive Explorer -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- SQLite Scan History -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>🗄️</span> SQLite Audit History (<code class="text-xs text-yellow-300">scan_history</code>)
+              </h4>
+              <button onclick="loadScanHistory()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition">
+                <span>🔄</span> Refresh
+              </button>
+            </div>
+            <div class="overflow-x-auto max-h-64 overflow-y-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-mono">
+                    <th class="p-2">Server ID</th>
+                    <th class="p-2">Score</th>
+                    <th class="p-2">Vulns</th>
+                    <th class="p-2">Rug-Pull</th>
+                    <th class="p-2">Date</th>
+                  </tr>
+                </thead>
+                <tbody id="scanHistoryTableBody" class="divide-y divide-slate-800/80 font-mono">
+                  <tr><td colspan="5" class="p-3 text-center text-slate-500">Loading audit history...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- S3 Bucket Object Vault -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                <span>🪣</span> S3 Bucket Object Vault
+              </h4>
+              <button onclick="loadS3ReportsList()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition">
+                <span>🔄</span> Refresh S3
+              </button>
+            </div>
+            <div class="overflow-x-auto max-h-64 overflow-y-auto">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-mono">
+                    <th class="p-2">S3 Key / Report File</th>
+                    <th class="p-2">Size</th>
+                    <th class="p-2">Mode</th>
+                  </tr>
+                </thead>
+                <tbody id="s3ReportsTableBody" class="divide-y divide-slate-800/80 font-mono">
+                  <tr><td colspan="3" class="p-3 text-center text-slate-500">Loading S3 objects...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -561,15 +752,33 @@
       const activeBtn = document.getElementById(`tabBtn-${tabId}`);
       activeBtn.classList.remove('border-transparent', 'text-slate-400');
       activeBtn.classList.add('border-emerald-500', 'text-emerald-400');
+      if (tabId === 'exports') {
+        refreshS3Status();
+        loadScanHistory();
+        loadS3ReportsList();
+      }
     }
 
     function openLiveDemoModal() {
       switchTab('rugpull');
     }
 
-    function downloadMarkdown() {
+    function downloadReport(format) {
       const path = document.getElementById('serverPathInput').value;
-      window.open(`/api/reports/markdown?server_path=${encodeURIComponent(path)}`, '_blank');
+      if (!path) return alert("Please select or specify a target server path first.");
+      window.location.href = `/api/reports/download/${format}?server_path=${encodeURIComponent(path)}`;
+    }
+
+    function previewReport(format) {
+      const path = document.getElementById('serverPathInput').value;
+      if (!path) return alert("Please select or specify a target server path first.");
+      window.open(`/api/reports/${format}?server_path=${encodeURIComponent(path)}`, '_blank');
+    }
+
+    function copyReportJson() {
+      if (!currentReport) return alert("Please run a security audit first to generate report JSON.");
+      navigator.clipboard.writeText(JSON.stringify(currentReport, null, 2));
+      showS3Alert("Report JSON copied to clipboard!", "success");
     }
 
     async function checkLMStudio() {
@@ -591,11 +800,184 @@
       } catch (e) {}
     }
 
+    async function refreshS3Status() {
+      try {
+        const bucket = document.getElementById('s3BucketInput')?.value || "mcp-security-auditor-bucket";
+        const res = await fetch(`/api/s3/status?bucket=${encodeURIComponent(bucket)}`);
+        const data = await res.json();
+        
+        const s3Dot = document.getElementById('s3Dot');
+        const s3Text = document.getElementById('s3Text');
+        const s3Badge = document.getElementById('s3StatusBadge');
+        const s3ModeBadge = document.getElementById('s3ModeBadge');
+        const s3StatusIndicator = document.getElementById('s3StatusIndicator');
+        const s3ModeText = document.getElementById('s3ModeText');
+        const s3RegionText = document.getElementById('s3RegionText');
+        const s3PathText = document.getElementById('s3PathText');
+
+        if (data.is_live_aws) {
+          if (s3Dot) s3Dot.className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
+          if (s3Text) s3Text.innerText = `S3: AWS (${data.bucket_name})`;
+          if (s3Badge) s3Badge.className = "text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
+          if (s3ModeBadge) s3ModeBadge.className = "text-xs px-3 py-1 rounded-full font-mono font-medium border bg-emerald-500/20 text-emerald-300 border-emerald-500/30 flex items-center gap-2";
+          if (s3StatusIndicator) s3StatusIndicator.className = "w-2 h-2 rounded-full bg-emerald-400";
+          if (s3ModeText) s3ModeText.innerText = "AWS S3 Cloud Live";
+        } else {
+          if (s3Dot) s3Dot.className = "inline-block w-2 h-2 rounded-full bg-amber-400";
+          if (s3Text) s3Text.innerText = `S3: Emulated (${data.bucket_name})`;
+          if (s3Badge) s3Badge.className = "text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
+          if (s3ModeBadge) s3ModeBadge.className = "text-xs px-3 py-1 rounded-full font-mono font-medium border bg-amber-500/20 text-amber-300 border-amber-500/30 flex items-center gap-2";
+          if (s3StatusIndicator) s3StatusIndicator.className = "w-2 h-2 rounded-full bg-amber-400";
+          if (s3ModeText) s3ModeText.innerText = "Local S3 Simulation Mode";
+        }
+
+        if (s3RegionText) s3RegionText.innerText = data.region || 'us-east-1';
+        if (s3PathText) s3PathText.innerText = data.storage_path || `s3://${data.bucket_name}`;
+      } catch (e) {
+        console.error("S3 status error:", e);
+      }
+    }
+
+    async function syncSQLiteToS3() {
+      const bucket = document.getElementById('s3BucketInput')?.value;
+      try {
+        showS3Alert("Syncing SQLite database (mcpaudit_pins.db) to S3 bucket...", "info");
+        const url = bucket ? `/api/s3/sync-db?bucket=${encodeURIComponent(bucket)}` : '/api/s3/sync-db';
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showS3Alert(`✅ SQLite Database Synced to S3 Successfully!\nURI: ${data.s3_uri}\nBytes: ${data.file_size} | Mode: ${data.mode}`, "success");
+          loadS3ReportsList();
+        } else {
+          showS3Alert(`❌ Sync Failed: ${data.error}`, "error");
+        }
+      } catch (e) {
+        showS3Alert(`Sync Exception: ${e}`, "error");
+      }
+    }
+
+    async function pullSQLiteFromS3() {
+      if (!confirm("Restore local SQLite database from S3? This will refresh local pins with the S3 backup.")) return;
+      const bucket = document.getElementById('s3BucketInput')?.value;
+      try {
+        showS3Alert("Restoring SQLite database from S3 bucket...", "info");
+        const url = bucket ? `/api/s3/pull-db?bucket=${encodeURIComponent(bucket)}` : '/api/s3/pull-db';
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showS3Alert(`✅ ${data.message}`, "success");
+          loadPins();
+          loadScanHistory();
+        } else {
+          showS3Alert(`❌ Restore Failed: ${data.error}`, "error");
+        }
+      } catch (e) {
+        showS3Alert(`Restore Exception: ${e}`, "error");
+      }
+    }
+
+    async function archiveCurrentReportToS3() {
+      const path = document.getElementById('serverPathInput').value;
+      const select = document.getElementById('serverSelect');
+      const id = select.value || 'server';
+      if (!path) return alert("Please select or specify a target server path first.");
+
+      try {
+        showS3Alert("Archiving security audit reports (MD, SARIF, HTML) to S3...", "info");
+        const res = await fetch('/api/s3/archive-report', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            server_path: path,
+            server_id: id,
+            use_lm_studio: false
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showS3Alert(`✅ Reports Archived to S3 Bucket!\n• Markdown: ${data.markdown_uri}\n• SARIF: ${data.sarif_uri}\n• Executive HTML: ${data.html_uri}`, "success");
+          loadS3ReportsList();
+          loadScanHistory();
+        } else {
+          showS3Alert(`❌ Archival Failed: ${data.detail || data.error}`, "error");
+        }
+      } catch (e) {
+        showS3Alert(`Archival Exception: ${e}`, "error");
+      }
+    }
+
+    function showS3Alert(msg, type) {
+      const alertBox = document.getElementById('s3ActionAlert');
+      if (!alertBox) return;
+      alertBox.classList.remove('hidden', 'bg-emerald-950/70', 'border-emerald-500/50', 'text-emerald-300', 'bg-red-950/70', 'border-red-500/50', 'text-red-300', 'bg-slate-900', 'border-slate-700', 'text-slate-300');
+      if (type === 'success') {
+        alertBox.classList.add('bg-emerald-950/70', 'border-emerald-500/50', 'text-emerald-300');
+      } else if (type === 'error') {
+        alertBox.classList.add('bg-red-950/70', 'border-red-500/50', 'text-red-300');
+      } else {
+        alertBox.classList.add('bg-slate-900', 'border-slate-700', 'text-slate-300');
+      }
+      alertBox.innerText = msg;
+    }
+
+    async function loadScanHistory() {
+      try {
+        const tbody = document.getElementById('scanHistoryTableBody');
+        const res = await fetch('/api/history');
+        const data = await res.json();
+        if (!data.history || data.history.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-slate-500">No scan history recorded in SQLite yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.history.map(h => {
+          const gradeColor = h.grade === 'A+' || h.grade === 'A' ? 'text-emerald-400' : h.grade === 'B' ? 'text-cyan-400' : 'text-red-400';
+          const rugBadge = h.rug_pull_detected ? '<span class="text-red-400 font-bold">🚨 YES</span>' : '<span class="text-emerald-400">✅ Clean</span>';
+          const dateStr = h.scanned_at ? h.scanned_at.split('T')[0] : '';
+          return `
+            <tr class="hover:bg-slate-800/60">
+              <td class="p-2 font-bold text-white truncate max-w-[120px]" title="${h.server_id}">${h.server_id}</td>
+              <td class="p-2 ${gradeColor} font-bold">${h.security_score} (${h.grade})</td>
+              <td class="p-2"><span class="text-red-400">${h.critical_count}C</span> <span class="text-orange-400">${h.high_count}H</span></td>
+              <td class="p-2">${rugBadge}</td>
+              <td class="p-2 text-slate-400">${dateStr}</td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error("Failed to load history", e);
+      }
+    }
+
+    async function loadS3ReportsList() {
+      try {
+        const tbody = document.getElementById('s3ReportsTableBody');
+        const res = await fetch('/api/s3/reports');
+        const data = await res.json();
+        if (!data.reports || data.reports.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-500">No archived reports in S3 bucket yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.reports.map(r => `
+          <tr class="hover:bg-slate-800/60">
+            <td class="p-2 text-slate-200 truncate max-w-[180px]" title="${r.key}">${r.key}</td>
+            <td class="p-2 text-slate-400">${r.size ? Math.round(r.size / 1024) + ' KB' : '-'}</td>
+            <td class="p-2 text-amber-400 text-[10px]">${r.s3_uri ? 'S3' : 'Local'}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error("Failed to load S3 files", e);
+      }
+    }
+
     // Initialize
     loadServers();
     loadPins();
     checkLMStudio();
+    refreshS3Status();
+    loadScanHistory();
+    loadS3ReportsList();
     setInterval(checkLMStudio, 10000);
+    setInterval(refreshS3Status, 30000);
   </script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import sys
 from pathlib import Path
@@ -212,14 +213,147 @@ def get_rug_pull_status():
     return {"version": ver}
 
 
+from fastapi.responses import HTMLResponse, JSONResponse, Response
+from mcpaudit.s3_storage import S3StorageManager
+
+s3_manager = S3StorageManager()
+
+
+@app.get("/api/s3/status")
+def get_s3_status(bucket: Optional[str] = None):
+    if bucket:
+        mgr = S3StorageManager(bucket_name=bucket)
+        return mgr.get_status()
+    return s3_manager.get_status()
+
+
+@app.post("/api/s3/sync-db")
+def sync_sqlite_to_s3(bucket: Optional[str] = None):
+    mgr = S3StorageManager(bucket_name=bucket) if bucket else s3_manager
+    res = mgr.sync_database_to_s3()
+    return res
+
+
+@app.post("/api/s3/pull-db")
+def pull_sqlite_from_s3(bucket: Optional[str] = None):
+    mgr = S3StorageManager(bucket_name=bucket) if bucket else s3_manager
+    res = mgr.restore_database_from_s3()
+    return res
+
+
+@app.get("/api/s3/reports")
+def list_s3_reports():
+    return {"reports": s3_manager.list_archived_reports()}
+
+
+@app.get("/api/history")
+def get_scan_history():
+    pin_store = PinStore()
+    return {"history": pin_store.get_scan_history(limit=50)}
+
+
+@app.post("/api/s3/archive-report")
+async def archive_report_to_s3(req: ScanRequest):
+    path = Path(req.server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+
+    res = await run_scan(req)
+    report = ScanReport(**res["report"])
+    engine = ReportEngine()
+    eff_id = req.server_id or path.stem
+
+    md = engine.generate_markdown(report)
+    sarif = engine.generate_sarif(report)
+    html = engine.generate_html(report)
+
+    up_md = s3_manager.upload_report_to_s3(md, "audit_report.md", eff_id, "text/markdown")
+    up_sarif = s3_manager.upload_report_to_s3(json.dumps(sarif, indent=2), "audit_report.sarif", eff_id, "application/sarif+json")
+    up_html = s3_manager.upload_report_to_s3(html, "audit_report.html", eff_id, "text/html")
+
+    return {
+        "success": True,
+        "message": f"Archived security reports for '{eff_id}' to S3 bucket.",
+        "markdown_uri": up_md.get("s3_uri"),
+        "sarif_uri": up_sarif.get("s3_uri"),
+        "html_uri": up_html.get("s3_uri"),
+    }
+
+
+# Direct Report Download Endpoints
+@app.get("/api/reports/download/markdown")
+async def download_markdown_report(server_path: str):
+    path = Path(server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
+    report = ScanReport(**res["report"])
+    engine = ReportEngine()
+    md = engine.generate_markdown(report)
+    filename = f"audit_report_{path.stem}.md"
+    return Response(
+        content=md,
+        media_type="text/markdown",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.get("/api/reports/download/sarif")
+async def download_sarif_report(server_path: str):
+    path = Path(server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
+    report = ScanReport(**res["report"])
+    engine = ReportEngine()
+    sarif = engine.generate_sarif(report)
+    filename = f"audit_report_{path.stem}.sarif"
+    return Response(
+        content=json.dumps(sarif, indent=2),
+        media_type="application/sarif+json",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.get("/api/reports/download/json")
+async def download_json_report(server_path: str):
+    path = Path(server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
+    report = ScanReport(**res["report"])
+    filename = f"audit_report_{path.stem}.json"
+    return Response(
+        content=report.model_dump_json(indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.get("/api/reports/download/html")
+async def download_html_report(server_path: str):
+    path = Path(server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
+    report = ScanReport(**res["report"])
+    engine = ReportEngine()
+    html = engine.generate_html(report)
+    filename = f"audit_report_{path.stem}.html"
+    return Response(
+        content=html,
+        media_type="text/html",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
 @app.get("/api/reports/sarif")
 async def get_sarif_export(server_path: str):
     path = Path(server_path)
     if not path.exists():
         raise HTTPException(status_code=404, detail="Server not found.")
     
-    # Run scan
-    res = await run_scan(ScanRequest(server_path=server_path))
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
     report = ScanReport(**res["report"])
     engine = ReportEngine()
     sarif = engine.generate_sarif(report)
@@ -232,11 +366,23 @@ async def get_markdown_export(server_path: str):
     if not path.exists():
         raise HTTPException(status_code=404, detail="Server not found.")
     
-    res = await run_scan(ScanRequest(server_path=server_path))
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
     report = ScanReport(**res["report"])
     engine = ReportEngine()
     md = engine.generate_markdown(report)
     return HTMLResponse(content=f"<pre style='font-family: monospace; white-space: pre-wrap;'>{md}</pre>")
+
+
+@app.get("/api/reports/html")
+async def get_html_export(server_path: str):
+    path = Path(server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
+    report = ScanReport(**res["report"])
+    engine = ReportEngine()
+    html = engine.generate_html(report)
+    return HTMLResponse(content=html)
 
 
 @app.get("/", response_class=HTMLResponse)

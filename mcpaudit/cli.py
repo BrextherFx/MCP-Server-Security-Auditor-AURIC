@@ -50,9 +50,12 @@ def scan(
     output_md: Optional[str] = typer.Option(None, "--md", help="Path to write Markdown audit report"),
     output_sarif: Optional[str] = typer.Option(None, "--sarif", help="Path to write SARIF 2.1.0 report"),
     output_json: Optional[str] = typer.Option(None, "--json", help="Path to write JSON report"),
+    output_html: Optional[str] = typer.Option(None, "--html", help="Path to write executive HTML report"),
     skip_dynamic: bool = typer.Option(False, "--skip-dynamic", help="Skip dynamic probing"),
     use_lm_studio: bool = typer.Option(True, "--lm-studio/--no-lm-studio", help="Enable LM Studio local LLM code analysis"),
     lm_studio_url: str = typer.Option("http://localhost:1234/v1", "--lm-url", help="LM Studio API base URL"),
+    s3_sync: bool = typer.Option(False, "--s3-sync", help="Archive reports and sync SQLite database to AWS S3 bucket"),
+    s3_bucket: Optional[str] = typer.Option(None, "--s3-bucket", help="AWS S3 bucket name (default: env AWS_S3_BUCKET)"),
 ):
     """Run full comprehensive audit: Static Analysis + Description Analysis + Dynamic Probing + Rug-Pull Diff."""
     console.print(f"[bold green]🔍 Starting MCP Security Audit on:[/bold green] [cyan]{server_path}[/cyan]...\n")
@@ -120,10 +123,42 @@ def scan(
     else:
         console.print("    ↳ [green]Baseline integrity verified (no rug-pull detected).[/green]")
 
+    # Record Scan in SQLite Database
+    from mcpaudit.s3_storage import S3StorageManager
+    s3_mgr = S3StorageManager(bucket_name=s3_bucket)
+
+    s3_uri = None
+    if s3_sync:
+        console.print("[bold blue]☁️  Syncing SQLite Database and Archiving Reports to AWS S3...[/bold blue]")
+        db_res = s3_mgr.sync_database_to_s3()
+        if db_res.get("success"):
+            console.print(f"    ↳ [green]SQLite DB Synced to:[/green] {db_res.get('s3_uri')}")
+        
+        # Archive report
+        engine_tmp = ReportEngine()
+        sarif_doc = engine_tmp.generate_sarif(report)
+        rep_res = s3_mgr.upload_report_to_s3(
+            json.dumps(sarif_doc, indent=2),
+            "audit_report.sarif",
+            effective_server_id,
+            "application/sarif+json"
+        )
+        s3_uri = rep_res.get("s3_uri")
+        console.print(f"    ↳ [green]SARIF 2.1.0 Archived to:[/green] {s3_uri}")
+
+    scan_row_id = pin_store.record_scan(report, effective_server_id, s3_uri=s3_uri)
+    console.print(f"    ↳ [dim]Scan recorded in SQLite database (ID: {scan_row_id}).[/dim]")
+
     # Generate Reports
     engine = ReportEngine()
     engine.print_terminal_summary(report)
-    engine.save_reports(report, markdown_path=output_md, sarif_path=output_sarif, json_path=output_json)
+    engine.save_reports(
+        report,
+        markdown_path=output_md,
+        sarif_path=output_sarif,
+        json_path=output_json,
+        html_path=output_html,
+    )
 
     if output_md:
         console.print(f"[green]Saved Markdown report to:[/green] {output_md}")
@@ -131,6 +166,8 @@ def scan(
         console.print(f"[green]Saved SARIF 2.1.0 report to:[/green] {output_sarif}")
     if output_json:
         console.print(f"[green]Saved JSON report to:[/green] {output_json}")
+    if output_html:
+        console.print(f"[green]Saved Executive HTML report to:[/green] {output_html}")
 
 
 @app.command()

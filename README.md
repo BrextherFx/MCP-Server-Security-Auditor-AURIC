@@ -145,11 +145,54 @@ Compares the current server tools against the approved SQLite baseline:
 mcpaudit diff test_servers/rug_pull_server.py --id my_server
 ```
 
+### `mcpaudit scan <server_path> --s3-sync`
+Performs an audit, records the result in SQLite, and automatically syncs the SQLite database & report artifacts to AWS S3:
+```bash
+mcpaudit scan test_servers/clean_math_server.py --s3-sync --s3-bucket my-auditor-vault --html audit.html
+```
+
+---
+
+## ☁️ AWS S3 Cloud Storage & SQLite Synchronization
+
+MCPAudit features an integrated cloud persistence engine combining local low-latency SQLite with durable cloud backups:
+
+- **Local SQLite Database (`mcpaudit_pins.db`)**: Stores canonical tool SHA-256 fingerprints, baseline approvals, and complete audit history (`scan_history`).
+- **AWS S3 Cloud Synchronization (`mcpaudit/s3_storage.py`)**:
+  - **Database Sync**: Uploads `mcpaudit_pins.db` to `s3://{bucket}/databases/mcpaudit_pins.db`.
+  - **Database Restore**: Restores approved pins down to any local auditor instance (`/api/s3/pull-db`).
+  - **Report Archival**: Stores `.html`, `.sarif`, `.md`, and `.json` audit logs to `s3://{bucket}/reports/{server_id}/{timestamp}_{filename}`.
+  - **Zero-Credential Simulation Fallback**: If AWS IAM credentials are not configured, the system seamlessly transitions to local emulated bucket storage (`./s3_bucket_storage/{bucket_name}/...`), ensuring 100% demo functionality offline.
+
+### Environment Configuration
+```env
+AWS_S3_BUCKET=mcp-security-auditor-bucket
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_access_key
+AWS_SECRET_ACCESS_KEY=your_secret_key
+# Optional for S3-compatible storage (MinIO, LocalStack, Cloudflare R2):
+# AWS_S3_ENDPOINT_URL=http://localhost:9000
+```
+
+---
+
+## 📄 Multi-Format Security Report Downloads
+
+Download audit findings directly from the CLI, Web UI, or REST API:
+
+| Format | File Extension | Audience / Use Case | REST Download Endpoint |
+|---|---|---|---|
+| **Executive HTML** | `.html` | C-Suite, Pitch Presentations, Security Reviewers | `GET /api/reports/download/html?server_path=...` |
+| **SARIF 2.1.0** | `.sarif` | GitHub Code Scanning, SonarQube, CI/CD Gates | `GET /api/reports/download/sarif?server_path=...` |
+| **Markdown Audit** | `.md` | Developers, PR Comments, Git Documentation | `GET /api/reports/download/markdown?server_path=...` |
+| **Raw JSON** | `.json` | Telemetry Ingestion, SIEM, Custom Scripts | `GET /api/reports/download/json?server_path=...` |
+
 ---
 
 ## 🧪 Test Suite
 
-Run the automated test suite with pytest:
+Run the full automated test suite covering static AST, Prompt Guard 2, dynamic MCP stdio probing, SQLite pin-and-diff, AWS S3 storage, and REST APIs:
 ```bash
 .\.venv\Scripts\pytest -v
 ```
+

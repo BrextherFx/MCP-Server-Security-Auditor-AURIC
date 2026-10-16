@@ -1,510 +1,1083 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html class="light" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCP Server Security Auditor (PS02)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <meta content="web_dashboard" name="shell-type">
+  <title>MCP Security Auditor | Admin & Security Monitoring</title>
+  
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #f4f5f8;
+        color: #18181b;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      body { overscroll-behavior: none; }
+      main > :first-child { margin-top: 0 !important; }
+      main > :last-child { margin-bottom: 0 !important; }
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
     tailwind.config = {
-      darkMode: 'class',
+      darkMode: "class",
       theme: {
         extend: {
           colors: {
-            brand: {
-              50: '#f0fdf4',
-              500: '#22c55e',
-              600: '#16a34a',
-              900: '#14532d',
-            },
-            cyber: {
-              dark: '#0f172a',
-              card: '#1e293b',
-              border: '#334155',
-              accent: '#38bdf8'
-            }
+            canvas: "#f4f5f8",
+            card: "#ffffff",
+            "card-subtle": "#f9fafb",
+            "accent-lime": "#d5eb45",
+            "accent-lime-dark": "#4a5400",
+            "border-soft": "#e5e7eb",
+            "border-subtle": "#f1f2f4",
+            "dark-dock": "#131417",
+            "dark-pill": "#1e2024",
+            "txt-main": "#111827",
+            "txt-muted": "#6b7280",
+            "txt-subtle": "#9ca3af",
+            "alert-red": "#ef4444",
+            "alert-red-bg": "#fef2f2",
+            "alert-amber": "#f59e0b",
+            "alert-green": "#10b981",
+            "alert-green-bg": "#ecfdf5"
+          },
+          borderRadius: {
+            '3xl': '1.5rem',
+            '2xl': '1.25rem',
+            'xl': '1rem',
+            'full': '9999px'
+          },
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          boxShadow: {
+            'subtle': '0 1px 3px rgba(0,0,0,0.03), 0 8px 24px -4px rgba(0,0,0,0.04)',
+            'dock': '0 20px 35px -10px rgba(0,0,0,0.35)',
+            'pill': '0 2px 6px rgba(0,0,0,0.04)'
           }
         }
       }
     }
   </script>
-  <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
-    .badge-CRITICAL { background-color: #ef4444; color: white; }
-    .badge-HIGH { background-color: #f97316; color: white; }
-    .badge-MEDIUM { background-color: #eab308; color: black; }
-    .badge-LOW { background-color: #3b82f6; color: white; }
-    .badge-INFO { background-color: #64748b; color: white; }
-  </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
-  <!-- Top Navigation -->
-  <header class="border-b border-cyber-border bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <span class="text-2xl">🛡️</span>
+
+<body class="bg-canvas font-sans text-txt-main antialiased min-h-screen selection:bg-accent-lime selection:text-dark-dock" id="dashboard-top">
+
+  <!-- SLEEK DARK CHARCOAL FLOATING SIDEBAR DOCK -->
+  <aside class="fixed left-5 top-5 w-16 bg-dark-dock rounded-3xl z-50 flex flex-col items-center gap-3 py-4 px-2 shadow-dock border border-white/5">
+    <div class="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-white cursor-pointer hover:bg-white/15 transition-all mb-1" onclick="scrollToSection('dashboard-top')" title="MCPAudit Home">
+      <span class="material-symbols-outlined text-[20px]">verified_user</span>
+    </div>
+
+    <nav class="flex flex-col items-center gap-2.5 w-full">
+      <a href="#dashboard-top" onclick="scrollToSection('dashboard-top')" class="w-10 h-10 rounded-xl bg-accent-lime text-dark-dock flex items-center justify-center shadow-lg transition-all" title="Admin & Security Monitoring">
+        <span class="material-symbols-outlined text-[20px] font-semibold">grid_view</span>
+      </a>
+
+      <a href="#findings-section" onclick="scrollToSection('findings-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Findings & Rules">
+        <span class="material-symbols-outlined text-[20px]">policy</span>
+        <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Findings</span>
+      </a>
+
+      <a href="#probing-traces-section" onclick="scrollToSection('probing-traces-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Dynamic Probing">
+        <span class="material-symbols-outlined text-[20px]">radar</span>
+        <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Probing</span>
+      </a>
+
+      <a href="#rugpull-studio" onclick="scrollToSection('rugpull-studio')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Rug-Pull Studio">
+        <span class="material-symbols-outlined text-[20px]">crisis_alert</span>
+        <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Rug-Pull Diff</span>
+      </a>
+
+      <a href="#reports-s3-section" onclick="scrollToSection('reports-s3-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Reports & AWS S3 Cloud Sync">
+        <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
+        <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Reports & S3</span>
+      </a>
+    </nav>
+
+    <div class="w-6 h-px bg-white/10 my-1"></div>
+
+    <div class="flex flex-col items-center gap-2">
+      <div onclick="scrollToSection('reports-s3-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center cursor-pointer transition-all" title="Settings & S3">
+        <span class="material-symbols-outlined text-[19px]">settings</span>
+      </div>
+      <div class="w-2 h-2 rounded-full bg-accent-lime animate-pulse" title="MCPAudit Active"></div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT WRAPPER -->
+  <div class="pl-28 pr-8 py-6 flex flex-col min-h-screen">
+
+    <!-- HEADER & FILTER PILL BAR -->
+    <header class="flex flex-col gap-4 mb-6">
+      <div class="flex items-center justify-between">
         <div>
-          <h1 class="font-bold text-xl text-white tracking-wide flex items-center gap-2">
-            MCP Security Auditor
-            <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-mono">PS02 Compliant</span>
-          </h1>
-          <p class="text-xs text-slate-400">Static Scanner • Description Analyzer • Dynamic Prober • Pin-and-Diff Rug-Pull Detector</p>
+          <div class="flex items-center gap-2">
+            <h1 class="text-[26px] font-bold text-txt-main tracking-tight leading-tight flex items-center gap-2.5">
+              Admin &amp; Security <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-accent-lime text-dark-dock text-[16px]"><span class="material-symbols-outlined text-[18px]">verified</span></span> Monitoring
+            </h1>
+            <span class="text-xs font-mono font-medium px-2.5 py-0.5 rounded-full bg-white border border-border-soft text-txt-muted shadow-sm">MCP Security Auditor Core</span>
+          </div>
+          <p class="text-[13px] text-txt-muted mt-0.5 font-normal">Real-time visibility into access, risks, and MCP agent activity.</p>
+        </div>
+
+        <!-- Right Header Status Badges (LM Studio, AWS S3, Avatar) -->
+        <div class="flex items-center gap-3">
+          <!-- LM Studio Status Pill -->
+          <div id="lmStudioBadge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-border-soft text-xs font-mono shadow-pill" title="Local LM Studio AI Engine">
+            <span id="lmStudioDot" class="w-2 h-2 rounded-full bg-zinc-400"></span>
+            <span id="lmStudioText" class="text-txt-muted">LM Studio: Checking...</span>
+          </div>
+
+          <!-- AWS S3 Cloud Status Pill -->
+          <div id="s3StatusBadge" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-border-soft text-xs font-mono shadow-pill" title="AWS S3 Bucket & SQLite Storage">
+            <span id="s3Dot" class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span id="s3Text" class="text-txt-muted">S3: Checking...</span>
+          </div>
+
+          <div class="h-6 w-px bg-border-soft mx-1"></div>
+
+          <!-- User Avatar -->
+          <div class="flex items-center gap-2 pl-1 cursor-pointer">
+            <div class="w-10 h-10 rounded-full bg-zinc-900 text-white flex items-center justify-center font-semibold text-xs border border-white shadow-subtle" title="SecOps Admin">
+              SC
+            </div>
+          </div>
         </div>
       </div>
-      <div class="flex items-center space-x-3">
-        <span id="lmStudioBadge" class="text-xs bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 rounded-full font-mono flex items-center gap-1.5" title="LM Studio Local LLM Connection">
-          <span id="lmStudioDot" class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
-          <span id="lmStudioText">LM Studio: Checking...</span>
-        </span>
-        <span id="s3StatusBadge" class="text-xs bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 rounded-full font-mono flex items-center gap-1.5" title="AWS S3 Bucket & SQLite Cloud Storage">
-          <span id="s3Dot" class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
-          <span id="s3Text">S3: Checking...</span>
-        </span>
-        <button onclick="openLiveDemoModal()" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
-          <span>⚡</span> Live Rug-Pull Demo Studio
-        </button>
-        <span class="text-xs text-slate-400 px-3 py-1 rounded bg-slate-800 border border-slate-700">Official MCP SDK 2.x</span>
-      </div>
-    </div>
-  </header>
 
-  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <!-- FILTER BUTTON PILL STRIP -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Download Report Action Pill -->
+          <div class="relative group">
+            <button onclick="scrollToSection('reports-s3-section')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-txt-main text-[13px] font-medium border border-border-soft hover:bg-zinc-50 shadow-pill transition-all" type="button">
+              <span class="material-symbols-outlined text-[17px] text-txt-muted">download</span>
+              <span>Download Report</span>
+            </button>
+          </div>
 
-    <!-- Scanner Control Bar -->
-    <div class="bg-cyber-card border border-cyber-border rounded-xl p-6 shadow-xl space-y-4">
-      <div class="flex flex-col md:flex-row gap-4 items-end">
-        <div class="flex-1">
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Select MCP Server Target</label>
-          <select id="serverSelect" onchange="onServerChange()" class="w-full bg-slate-900 border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyber-accent">
-            <option value="">Loading test servers...</option>
-          </select>
-        </div>
-        <div class="flex-1">
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Target Script Path</label>
-          <input type="text" id="serverPathInput" class="w-full bg-slate-900 border border-cyber-border rounded-lg px-4 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-cyber-accent font-mono" placeholder="Path to server.py">
-        </div>
-        <div class="flex items-center space-x-2">
-          <button id="scanBtn" onclick="triggerScan()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2.5 rounded-lg text-sm flex items-center gap-2 transition shadow-lg shadow-emerald-900/30">
-            <span id="scanSpinner" class="hidden animate-spin">🔄</span>
-            <span>Run Security Audit</span>
+          <!-- Server Selector Dropdown Pill -->
+          <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-border-soft shadow-pill">
+            <span class="material-symbols-outlined text-[17px] text-txt-muted">dns</span>
+            <select id="serverSelect" onchange="onServerChange()" class="bg-transparent text-xs font-mono font-bold text-txt-main focus:outline-none cursor-pointer pr-2">
+              <option value="">Loading test servers...</option>
+            </select>
+            <input type="hidden" id="serverPathInput">
+          </div>
+
+          <!-- Active Server Status Tag -->
+          <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-border-soft shadow-pill">
+            <span id="serverStatusPulse" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            <span id="activeServerNameLabel" class="text-[12px] font-mono font-semibold text-txt-main">clean_math_server</span>
+            <span id="activeServerTag" class="px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">READY</span>
+          </div>
+
+          <!-- View Alerts Button -->
+          <button onclick="scrollToSection('findings-section')" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-txt-main text-[13px] font-medium border border-border-soft hover:bg-zinc-50 shadow-pill transition-all" type="button">
+            <span class="material-symbols-outlined text-[17px] text-alert-red">notification_important</span>
+            <span>View Alerts</span>
+            <span id="pillCritCount" class="px-1.5 py-0.2 rounded-full bg-red-100 text-red-700 text-[10px] font-bold">0 Crit</span>
           </button>
-          <button onclick="pinCurrentServer()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium px-4 py-2.5 rounded-lg text-sm flex items-center gap-1.5 transition" title="Approve and pin tools to SQLite baseline">
-            <span>📌</span> Pin Baseline
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex items-center gap-2">
+          <!-- LM Studio Deep AI Review Toggle -->
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-border-soft text-xs text-txt-muted cursor-pointer hover:text-txt-main shadow-pill mr-1">
+            <input type="checkbox" id="useLMStudioCheck" checked class="rounded border-border-soft text-dark-dock focus:ring-accent-lime">
+            <span class="font-medium text-[11.5px]">LM Studio AI Review</span>
+          </label>
+
+          <!-- Run Full Audit Button -->
+          <button id="scanBtn" onclick="triggerScan()" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-dark-dock text-white text-[13px] font-semibold hover:bg-zinc-800 shadow-sm transition-all" type="button">
+            <span id="scanSpinner" class="hidden animate-spin text-[16px]">🔄</span>
+            <span id="scanPlayIcon" class="material-symbols-outlined text-[16px] text-accent-lime">play_arrow</span>
+            <span>Run Full Audit</span>
+          </button>
+
+          <!-- Inspect Diff Button -->
+          <button onclick="scrollToSection('rugpull-studio')" class="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white text-txt-main text-[13px] font-medium border border-border-soft hover:bg-zinc-50 shadow-pill transition-all" type="button">
+            <span class="material-symbols-outlined text-[16px] text-alert-red">crisis_alert</span>
+            <span>Inspect Diff</span>
           </button>
         </div>
       </div>
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pt-2 border-t border-slate-800">
-        <p id="targetDescription" class="text-xs text-slate-400 italic"></p>
-        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white transition">
-          <input type="checkbox" id="useLMStudioCheck" checked class="rounded border-slate-700 bg-slate-900 text-purple-500 focus:ring-purple-400">
-          <span class="flex items-center gap-1.5 font-medium">
-            <span class="text-purple-400">🤖</span> Enable LM Studio Deep AI Code Analysis
-          </span>
-        </label>
-      </div>
-    </div>
+    </header>
 
-    <!-- Rug-Pull Alert Banner (Conditional) -->
-    <div id="rugPullBanner" class="hidden bg-gradient-to-r from-red-950 via-red-900 to-red-950 border-2 border-red-500 rounded-xl p-5 shadow-2xl animate-pulse">
-      <div class="flex items-start justify-between">
-        <div class="flex items-start space-x-3">
-          <span class="text-3xl">🚨</span>
-          <div>
-            <h2 class="text-lg font-bold text-red-100 flex items-center gap-2">
-              CRITICAL INTEGRITY ALERT: RUG-PULL DETECTED!
-            </h2>
-            <p class="text-sm text-red-200 mt-1">
-              This MCP server has mutated since its approved baseline in SQLite! An unauthorized tool addition, modified description, or parameter mutation was intercepted before agent execution.
-            </p>
-            <div id="rugPullDetailsText" class="mt-2 text-xs font-mono bg-red-950/80 p-3 rounded border border-red-800/80 text-red-200"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <main class="flex flex-col gap-6 flex-1">
 
-    <!-- Summary Metrics Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
-      <!-- Security Score -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 flex flex-col items-center justify-center text-center shadow">
-        <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Audit Score</span>
-        <div id="scoreDisplay" class="text-3xl font-extrabold text-emerald-400 mt-1">100<span class="text-xs font-normal text-slate-400">/100</span></div>
-        <span id="gradeBadge" class="mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">A+</span>
-      </div>
-
-      <!-- Critical -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
-        <span class="text-xs uppercase font-semibold text-red-400 tracking-wider">Critical</span>
-        <div id="cntCritical" class="text-3xl font-bold text-red-500 mt-1">0</div>
-        <span class="text-[10px] text-slate-400">Immediate Risk</span>
-      </div>
-
-      <!-- High -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
-        <span class="text-xs uppercase font-semibold text-orange-400 tracking-wider">High</span>
-        <div id="cntHigh" class="text-3xl font-bold text-orange-400 mt-1">0</div>
-        <span class="text-[10px] text-slate-400">Severe Flaw</span>
-      </div>
-
-      <!-- Medium -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
-        <span class="text-xs uppercase font-semibold text-yellow-400 tracking-wider">Medium</span>
-        <div id="cntMedium" class="text-3xl font-bold text-yellow-400 mt-1">0</div>
-        <span class="text-[10px] text-slate-400">Suspicious</span>
-      </div>
-
-      <!-- Low -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
-        <span class="text-xs uppercase font-semibold text-blue-400 tracking-wider">Low / Info</span>
-        <div id="cntLow" class="text-3xl font-bold text-blue-400 mt-1">0</div>
-        <span class="text-[10px] text-slate-400">Hardening</span>
-      </div>
-
-      <!-- Tools Discovered -->
-      <div class="bg-cyber-card border border-cyber-border rounded-xl p-5 text-center shadow">
-        <span class="text-xs uppercase font-semibold text-slate-400 tracking-wider">Tools Audited</span>
-        <div id="cntTools" class="text-3xl font-bold text-cyber-accent mt-1">0</div>
-        <span class="text-[10px] text-slate-400">Discovered</span>
-      </div>
-    </div>
-
-    <!-- Tabbed Analysis View -->
-    <div class="bg-cyber-card border border-cyber-border rounded-xl overflow-hidden shadow-xl">
-      <!-- Tabs Header -->
-      <div class="flex border-b border-cyber-border bg-slate-900/50 px-4">
-        <button onclick="switchTab('findings')" id="tabBtn-findings" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-emerald-500 text-emerald-400 flex items-center gap-2">
-          <span>🔍</span> All Findings (<span id="tabCountFindings">0</span>)
-        </button>
-        <button onclick="switchTab('promptguard')" id="tabBtn-promptguard" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
-          <span>🧠</span> Tool Poisoning / Prompt Guard
-        </button>
-        <button onclick="switchTab('dynamic')" id="tabBtn-dynamic" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
-          <span>⚡</span> Dynamic Prober Traces (<span id="tabCountTraces">0</span>)
-        </button>
-        <button onclick="switchTab('rugpull')" id="tabBtn-rugpull" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
-          <span>🔄</span> Pin-and-Diff / Rug-Pull Lab
-        </button>
-        <button onclick="switchTab('exports')" id="tabBtn-exports" class="tab-btn px-4 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2">
-          <span>☁️</span> Reports & S3 Cloud Sync
-        </button>
-      </div>
-
-      <!-- Tab Content: Findings -->
-      <div id="tab-findings" class="tab-pane p-6 space-y-4">
-        <div id="findingsContainer" class="space-y-3">
-          <p class="text-sm text-slate-400">Click "Run Security Audit" above to scan the target server.</p>
-        </div>
-      </div>
-
-      <!-- Tab Content: Prompt Guard -->
-      <div id="tab-promptguard" class="tab-pane p-6 space-y-4 hidden">
-        <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-800 text-xs text-slate-300">
-          <strong class="text-emerald-400">Description Analyzer (Prompt Guard 2 & Open-Weight Model):</strong> Scans tool names, descriptions, and input schemas for covert AI instructions, instruction overrides (<code class="text-orange-300">&lt;system&gt;</code>, <code class="text-orange-300">ignore previous instructions</code>), forced priority execution, zero-width steganography, and credential harvesting directives.
-        </div>
-        <div id="promptGuardContainer" class="space-y-4">
-          <p class="text-sm text-slate-400">No tools analyzed yet.</p>
-        </div>
-      </div>
-
-      <!-- Tab Content: Dynamic Prober -->
-      <div id="tab-dynamic" class="tab-pane p-6 space-y-4 hidden">
-        <div class="bg-slate-900/60 p-4 rounded-lg border border-slate-800 text-xs text-slate-300">
-          <strong class="text-emerald-400">Dynamic MCP Client Prober:</strong> Connects to the server over stdio, retrieves tool schemas, generates benign baseline inputs and security fuzzing payloads (path traversal, command injection), executes calls, and monitors for leaks or unhandled errors.
-        </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead>
-              <tr class="border-b border-slate-800 bg-slate-900/80 text-slate-400">
-                <th class="p-3">Tool Name</th>
-                <th class="p-3">Probe Type</th>
-                <th class="p-3">Injected Arguments</th>
-                <th class="p-3">Response Payload</th>
-                <th class="p-3">Latency</th>
-                <th class="p-3">Result</th>
-              </tr>
-            </thead>
-            <tbody id="dynamicTracesTable" class="divide-y divide-slate-800 font-mono">
-              <tr>
-                <td colspan="6" class="p-4 text-center text-slate-500 font-sans">No dynamic traces recorded yet.</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Tab Content: Rug-Pull Lab -->
-      <div id="tab-rugpull" class="tab-pane p-6 space-y-6 hidden">
-        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-4">
-          <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <span>⚡</span> Interactive Live Rug-Pull Demonstration
-          </h3>
-          <p class="text-xs text-slate-300">
-            A rug-pull occurs when an approved MCP server changes its tool list or descriptions after being trusted. Test how the SHA-256 fingerprinting and DeepDiff engine immediately flags tampering!
-          </p>
-
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <!-- Step 1 -->
-            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
-              <span class="text-xs font-bold text-emerald-400">STEP 1: APPROVE BASELINE</span>
-              <p class="text-xs text-slate-400">Set server to v1 (Safe Notes App) and pin its approved tool fingerprints in SQLite.</p>
-              <button onclick="setRugPullVersion('1', true)" class="w-full py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-xs font-medium transition">
-                Pin Baseline v1
-              </button>
+      <!-- TOP TELEMETRY ALERT BANNER (CRITICAL RUG-PULL DETECTED) -->
+      <div id="rugPullBanner" class="hidden relative overflow-hidden rounded-2xl bg-white border border-red-200/80 p-4 shadow-subtle">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-2xl bg-red-50 text-alert-red flex items-center justify-center shrink-0 border border-red-100">
+              <span class="material-symbols-outlined text-[22px] animate-pulse">gpp_bad</span>
             </div>
-
-            <!-- Step 2 -->
-            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
-              <span class="text-xs font-bold text-red-400">STEP 2: TRIGGER RUG-PULL</span>
-              <p class="text-xs text-slate-400">Mutate server to v2 (adds Trojan tool <code class="text-orange-300">system_terminal_exec</code> & poisons description).</p>
-              <button onclick="setRugPullVersion('2', false)" class="w-full py-2 bg-red-700 hover:bg-red-600 text-white rounded text-xs font-medium transition">
-                Simulate Live Rug-Pull (v2)
-              </button>
-            </div>
-
-            <!-- Step 3 -->
-            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-2">
-              <span class="text-xs font-bold text-cyber-accent">STEP 3: VERIFY INTEGRITY</span>
-              <p class="text-xs text-slate-400">Audit the server to intercept the changes and view the DeepDiff report.</p>
-              <button onclick="selectAndScanRugPull()" class="w-full py-2 bg-sky-700 hover:bg-sky-600 text-white rounded text-xs font-medium transition">
-                Audit Rug-Pull Server
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-3">
-          <h4 class="text-sm font-semibold text-slate-300">Current Pinned Baselines in SQLite:</h4>
-          <div id="pinsListContainer" class="text-xs font-mono bg-slate-900 p-4 rounded-lg border border-slate-800">
-            Loading database pins...
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab Content: Exports & S3 Cloud Sync -->
-      <div id="tab-exports" class="tab-pane p-6 space-y-8 hidden">
-        <!-- Part 1: Download Security Reports -->
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-base font-bold text-white flex items-center gap-2">
-                <span>📄</span> Export & Download Security Audit Reports
-              </h3>
-              <p class="text-xs text-slate-400">Download comprehensive audit reports in executive, developer, or machine-readable compliance formats.</p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- HTML Executive Presentation Report -->
-            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-emerald-500/40 transition">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="text-2xl">📑</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">Executive HTML</span>
-                </div>
-                <h4 class="text-sm font-bold text-white mt-2">Executive Presentation</h4>
-                <p class="text-xs text-slate-400 mt-1">Full-color executive report with vulnerability cards, score gauges, and print-ready CSS layout.</p>
-              </div>
-              <div class="pt-3 border-t border-slate-800/80 space-y-2">
-                <button onclick="downloadReport('html')" class="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
-                  <span>⬇️</span> Download .HTML
-                </button>
-                <button onclick="previewReport('html')" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
-                  <span>👁️</span> Preview in Browser
-                </button>
-              </div>
-            </div>
-
-            <!-- SARIF 2.1.0 Oasis Report -->
-            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-sky-500/40 transition">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="text-2xl">🛡️</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30">SARIF 2.1.0</span>
-                </div>
-                <h4 class="text-sm font-bold text-white mt-2">OASIS SARIF Benchmark</h4>
-                <p class="text-xs text-slate-400 mt-1">Standardized static analysis format for GitHub Code Scanning, SonarQube, and CI/CD automated gates.</p>
-              </div>
-              <div class="pt-3 border-t border-slate-800/80 space-y-2">
-                <button onclick="downloadReport('sarif')" class="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
-                  <span>⬇️</span> Download .SARIF
-                </button>
-                <button onclick="previewReport('sarif')" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
-                  <span>👁️</span> View SARIF JSON
-                </button>
-              </div>
-            </div>
-
-            <!-- Markdown Audit Report -->
-            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-amber-500/40 transition">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="text-2xl">📝</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Markdown .MD</span>
-                </div>
-                <h4 class="text-sm font-bold text-white mt-2">Markdown Audit</h4>
-                <p class="text-xs text-slate-400 mt-1">Developer-friendly Markdown document detailing CVSS scoring, finding evidence, and remediation steps.</p>
-              </div>
-              <div class="pt-3 border-t border-slate-800/80 space-y-2">
-                <button onclick="downloadReport('markdown')" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
-                  <span>⬇️</span> Download .MD
-                </button>
-                <button onclick="previewReport('markdown')" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
-                  <span>👁️</span> View Markdown
-                </button>
-              </div>
-            </div>
-
-            <!-- Raw JSON Telemetry -->
-            <div class="bg-slate-900 p-5 rounded-xl border border-slate-800 space-y-3 flex flex-col justify-between hover:border-purple-500/40 transition">
-              <div>
-                <div class="flex items-center justify-between">
-                  <span class="text-2xl">⚙️</span>
-                  <span class="text-[10px] px-2 py-0.5 rounded font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">Schema JSON</span>
-                </div>
-                <h4 class="text-sm font-bold text-white mt-2">Raw JSON Telemetry</h4>
-                <p class="text-xs text-slate-400 mt-1">Complete structured scan payload with tool schemas, AST node details, and dynamic trace results.</p>
-              </div>
-              <div class="pt-3 border-t border-slate-800/80 space-y-2">
-                <button onclick="downloadReport('json')" class="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow">
-                  <span>⬇️</span> Download .JSON
-                </button>
-                <button onclick="copyReportJson()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium transition flex items-center justify-center gap-1">
-                  <span>📋</span> Copy to Clipboard
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Part 2: AWS S3 Cloud Database & Storage Manager -->
-        <div class="bg-slate-900/90 border border-cyber-border rounded-xl p-6 shadow-xl space-y-5">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
             <div>
               <div class="flex items-center gap-2">
-                <span class="text-xl">☁️</span>
-                <h3 class="text-base font-bold text-white">AWS S3 Cloud Database & Report Archival</h3>
+                <span class="text-[14px] font-bold text-txt-main">Critical Schema Drift &amp; Rug-Pull Detected</span>
+                <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-red-50 text-alert-red border border-red-200 font-bold uppercase">Post-Approval Tamper</span>
               </div>
-              <p class="text-xs text-slate-400 mt-0.5">Bidirectional synchronization of SQLite pins (<code class="text-yellow-300">mcpaudit_pins.db</code>) and automated report archiving to AWS S3 bucket storage.</p>
-            </div>
-            <div id="s3ModeBadge" class="text-xs px-3 py-1 rounded-full font-mono font-medium border bg-amber-500/10 text-amber-300 border-amber-500/30 flex items-center gap-2">
-              <span id="s3StatusIndicator" class="w-2 h-2 rounded-full bg-amber-400"></span>
-              <span id="s3ModeText">Checking S3...</span>
+              <p id="rugPullDetailsText" class="text-[12.5px] text-txt-muted mt-0.5 font-mono">
+                Post-approval tool mutation intercepted before agent execution! An unauthorized tool addition, altered prompt description, or mutated schema was detected.
+              </p>
             </div>
           </div>
-
-          <!-- Configuration & Status Grid -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-1.5">
-              <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Target S3 Bucket</label>
-              <div class="flex gap-2">
-                <input id="s3BucketInput" type="text" value="mcp-security-auditor-bucket" class="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-amber-400">
-                <button onclick="refreshS3Status()" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-200 transition" title="Apply Bucket">
-                  🔄
-                </button>
-              </div>
-            </div>
-
-            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-1">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">AWS Region & Storage Mode</span>
-              <div class="text-xs text-white font-mono" id="s3RegionText">us-east-1</div>
-              <div class="text-[11px] text-slate-400 truncate" id="s3PathText">s3_bucket_storage/mcp-security-auditor-bucket</div>
-            </div>
-
-            <div class="bg-slate-950 p-4 rounded-lg border border-slate-800 space-y-1">
-              <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Local SQLite Database</span>
-              <div class="text-xs text-emerald-400 font-mono">mcpaudit_pins.db</div>
-              <div class="text-[11px] text-slate-400">Tables: <code class="text-slate-300">server_pins</code>, <code class="text-slate-300">scan_history</code>, <code class="text-slate-300">audit_events</code></div>
-            </div>
-          </div>
-
-          <!-- Sync Action Buttons -->
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <button onclick="syncSQLiteToS3()" class="py-2.5 px-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-amber-950/40">
-              <span>☁️</span> Sync SQLite Database to S3
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="scrollToSection('rugpull-studio')" class="px-3.5 py-1.5 rounded-full bg-red-50 text-alert-red text-[12px] font-semibold border border-red-200 hover:bg-red-100 transition-all flex items-center gap-1">
+              <span>Review Tamper Diff</span>
+              <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
             </button>
-            <button onclick="pullSQLiteFromS3()" class="py-2.5 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-2">
-              <span>📥</span> Restore SQLite Database from S3
-            </button>
-            <button onclick="archiveCurrentReportToS3()" class="py-2.5 px-4 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40">
-              <span>📦</span> Archive Current Report to S3
+            <button onclick="setRugPullVersion('1', true)" class="px-3.5 py-1.5 rounded-full bg-dark-dock text-white text-[12px] font-semibold hover:bg-zinc-800 transition-all flex items-center gap-1 shadow-sm">
+              <span class="material-symbols-outlined text-[15px] text-accent-lime">lock_reset</span>
+              <span>Re-pin Clean Baseline</span>
             </button>
           </div>
+        </div>
+      </div>
 
-          <!-- Action Feedback Alert Box -->
-          <div id="s3ActionAlert" class="hidden text-xs font-mono p-3 rounded border"></div>
+      <!-- SECTION 1: 4 MAIN KPI SCORECARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- Card 1: Security Alerts -->
+        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+              <span class="material-symbols-outlined text-[18px]">shield</span>
+              <span>Security Alerts</span>
+            </div>
+            <button onclick="scrollToSection('findings-section')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+          </div>
+          <div class="my-3 flex items-baseline gap-2.5">
+            <div id="cntFindings" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
+            <span id="kpiAlertRateBadge" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5">
+              0% <span class="material-symbols-outlined text-[13px]">check</span>
+            </span>
+            <span id="cntCriticalText" class="text-xs text-txt-subtle font-mono">/ 0 crit</span>
+          </div>
+          <!-- Vertical bar mini chart -->
+          <div id="kpiBarChart" class="flex items-end gap-1.5 h-10 w-full pt-2">
+            <div class="w-1.5 bg-dark-dock rounded-full h-[35%]"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[55%]"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[40%]"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[70%]"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[95%]"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[60%]"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[45%]"></div>
+            <div class="w-1.5 bg-dark-dock/30 rounded-full h-[30%]"></div>
+            <div class="w-1.5 bg-dark-dock/20 rounded-full h-[25%]"></div>
+            <div class="w-1.5 bg-dark-dock/20 rounded-full h-[20%]"></div>
+            <div class="w-1.5 bg-dark-dock/15 rounded-full h-[15%]"></div>
+            <div class="w-1.5 bg-dark-dock/10 rounded-full h-[10%]"></div>
+          </div>
         </div>
 
-        <!-- Part 3: SQLite Scan History & S3 Archive Explorer -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- SQLite Scan History -->
-          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h4 class="text-sm font-bold text-white flex items-center gap-2">
-                <span>🗄️</span> SQLite Audit History (<code class="text-xs text-yellow-300">scan_history</code>)
-              </h4>
-              <button onclick="loadScanHistory()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition">
-                <span>🔄</span> Refresh
-              </button>
+        <!-- Card 2: High-Risk Events / Rug-Pull Status -->
+        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+              <span class="material-symbols-outlined text-[18px]">crisis_alert</span>
+              <span>High-Risk Events</span>
             </div>
-            <div class="overflow-x-auto max-h-64 overflow-y-auto">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr class="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-mono">
-                    <th class="p-2">Server ID</th>
-                    <th class="p-2">Score</th>
-                    <th class="p-2">Vulns</th>
-                    <th class="p-2">Rug-Pull</th>
-                    <th class="p-2">Date</th>
-                  </tr>
-                </thead>
-                <tbody id="scanHistoryTableBody" class="divide-y divide-slate-800/80 font-mono">
-                  <tr><td colspan="5" class="p-3 text-center text-slate-500">Loading audit history...</td></tr>
-                </tbody>
-              </table>
+            <button onclick="scrollToSection('rugpull-studio')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+          </div>
+          <div class="my-3 flex items-baseline gap-2.5">
+            <div id="cntHighRisk" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
+            <span id="kpiHighRateBadge" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono font-bold text-[11px] flex items-center gap-0.5">
+              Normal
+            </span>
+            <span id="lblRugPullStatus" class="text-xs text-txt-subtle font-mono">/ clean</span>
+          </div>
+          <!-- Segmented capsule pills -->
+          <div id="kpiCapsuleList" class="flex items-center gap-1.5 pt-2">
+            <div class="h-8 w-4 bg-dark-dock rounded-full"></div>
+            <div class="h-8 w-4 bg-dark-dock rounded-full"></div>
+            <div class="h-8 w-4 bg-dark-dock rounded-full"></div>
+            <div class="h-8 w-4 bg-dark-dock/20 rounded-full border border-dark-dock/20"></div>
+            <div class="h-8 w-4 bg-dark-dock/20 rounded-full border border-dark-dock/20"></div>
+            <div class="h-8 w-4 bg-dark-dock/10 rounded-full border border-dark-dock/10"></div>
+            <div class="h-8 w-4 bg-dark-dock/10 rounded-full border border-dark-dock/10"></div>
+            <div class="h-8 w-4 bg-dark-dock/5 rounded-full border border-dark-dock/10"></div>
+          </div>
+        </div>
+
+        <!-- Card 3: Dynamic Canary Probes -->
+        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+              <span class="material-symbols-outlined text-[18px]">network_check</span>
+              <span>Dynamic Canary Probes</span>
+            </div>
+            <button onclick="scrollToSection('probing-traces-section')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+          </div>
+          <div class="my-3 flex items-baseline gap-2.5">
+            <div id="cntProbes" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
+            <span id="kpiProbeLatencyBadge" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5">
+              Live
+            </span>
+            <span id="cntFailedProbes" class="text-xs text-txt-subtle font-mono">/ 0 failed</span>
+          </div>
+          <!-- Mini smooth wave sparkline -->
+          <div class="relative h-10 w-full flex items-center justify-center pt-1">
+            <svg class="w-full h-8 overflow-visible" fill="none" viewBox="0 0 160 30">
+              <path d="M0,22 Q20,24 40,16 T80,18 T120,8 T160,14" fill="none" stroke="#d1d5db" stroke-linecap="round" stroke-width="2"></path>
+              <circle cx="120" cy="8" fill="#131417" r="4.5" stroke="#ffffff" stroke-width="2"></circle>
+            </svg>
+            <div id="kpiLatencyPill" class="absolute right-6 -top-1 bg-dark-dock text-white text-[10px] font-mono px-1.5 py-0.5 rounded-md shadow-sm">
+              0 ms
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4: Tools Discovered & Audited -->
+        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+              <span class="material-symbols-outlined text-[18px]">fingerprint</span>
+              <span>Tools Discovered</span>
+            </div>
+            <button onclick="scrollToSection('rugpull-studio')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+          </div>
+          <div class="my-3 flex items-baseline gap-2.5">
+            <div id="cntTools" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
+            <span id="kpiScorePill" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5">
+              Score: 100
+            </span>
+            <span class="text-xs text-txt-subtle font-mono">/ MCP 2.x</span>
+          </div>
+          <!-- Chunky block columns with curved corners -->
+          <div class="flex items-end justify-between gap-1.5 h-10 w-full pt-1">
+            <div class="flex-1 bg-dark-dock rounded-xl h-[45%]"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[65%]"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[100%]"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[85%]"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[95%]"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: ATTACK SURFACE RADAR & ASSET INTEGRITY MAP -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Vector Radar & Severity Comparator (8 Cols) -->
+        <div class="lg:col-span-8 bg-white rounded-3xl p-6 border border-border-subtle shadow-subtle flex flex-col justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-accent-lime-dark bg-lime-100 px-2 py-0.5 rounded-full">AURIC Core Telemetry</span>
+                <span class="text-xs text-txt-muted font-mono">// 6-Axis Merkle Drift</span>
+              </div>
+              <h2 class="text-[20px] font-bold text-txt-main mt-1">MCP Vector Surface Radar &amp; Posture</h2>
+            </div>
+            <div class="flex items-center bg-zinc-100 p-1 rounded-full text-[12px] font-medium text-txt-muted">
+              <button class="px-3 py-1 rounded-full bg-white text-txt-main font-semibold shadow-pill">Live Scan</button>
+              <button onclick="scrollToSection('rugpull-studio')" class="px-3 py-1 text-txt-muted hover:text-txt-main transition-colors">Baseline</button>
+              <button onclick="scrollToSection('reports-s3-section')" class="px-3 py-1 text-txt-muted hover:text-txt-main transition-colors">S3 Archive</button>
             </div>
           </div>
 
-          <!-- S3 Bucket Object Vault -->
-          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h4 class="text-sm font-bold text-white flex items-center gap-2">
-                <span>🪣</span> S3 Bucket Object Vault
-              </h4>
-              <button onclick="loadS3ReportsList()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 transition">
-                <span>🔄</span> Refresh S3
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            <!-- SVG Radar Graph -->
+            <div class="md:col-span-8 flex flex-col items-center justify-center p-4 bg-zinc-50/80 rounded-2xl border border-zinc-100 relative">
+              <div class="w-full flex items-center justify-between mb-2">
+                <span class="text-xs font-mono font-semibold text-txt-muted uppercase tracking-wider flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-accent-lime-dark"></span> Attack Vector Radar
+                </span>
+                <span id="radarDriftBadge" class="text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">0% Surface Drift</span>
+              </div>
+
+              <div class="relative w-full max-w-[340px] aspect-square flex items-center justify-center">
+                <svg class="w-full h-full select-none overflow-visible" viewBox="0 0 340 340">
+                  <defs>
+                    <radialGradient cx="50%" cy="50%" id="lightSpiderBaseline" r="50%">
+                      <stop offset="0%" stop-color="#10b981" stop-opacity="0.25"></stop>
+                      <stop offset="100%" stop-color="#10b981" stop-opacity="0.05"></stop>
+                    </radialGradient>
+                    <radialGradient cx="50%" cy="50%" id="lightSpiderDrift" r="50%">
+                      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.3"></stop>
+                      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.08"></stop>
+                    </radialGradient>
+                  </defs>
+
+                  <!-- Concentric Rings -->
+                  <polygon fill="none" points="170,146 190.8,158 190.8,182 170,194 149.2,182 149.2,158" stroke="#e5e7eb" stroke-dasharray="2 2" stroke-width="1"></polygon>
+                  <polygon fill="none" points="170,122 211.6,146 211.6,194 170,218 128.4,194 128.4,146" stroke="#e5e7eb" stroke-width="1"></polygon>
+                  <polygon fill="none" points="170,98 232.4,134 232.4,206 170,242 107.6,206 107.6,134" stroke="#e5e7eb" stroke-dasharray="2 2" stroke-width="1"></polygon>
+                  <polygon fill="none" points="170,74 253.1,122 253.1,218 170,266 86.9,218 86.9,122" stroke="#e5e7eb" stroke-width="1"></polygon>
+                  <polygon fill="#ffffff" fill-opacity="0.7" points="170,50 273.9,110 273.9,230 170,290 66.1,230 66.1,110" stroke="#d1d5db" stroke-width="1.5"></polygon>
+
+                  <!-- Spokes -->
+                  <line stroke="#d1d5db" stroke-width="1" x1="170" x2="170" y1="170" y2="50"></line>
+                  <line stroke="#d1d5db" stroke-width="1" x1="170" x2="273.9" y1="170" y2="110"></line>
+                  <line stroke="#d1d5db" stroke-width="1" x1="170" x2="273.9" y1="170" y2="230"></line>
+                  <line stroke="#d1d5db" stroke-width="1" x1="170" x2="170" y1="170" y2="290"></line>
+                  <line stroke="#d1d5db" stroke-width="1" x1="170" x2="66.1" y1="170" y2="230"></line>
+                  <line stroke="#d1d5db" stroke-width="1" x1="170" x2="66.1" y1="170" y2="110"></line>
+
+                  <!-- Baseline Polygon (Clean Green) -->
+                  <polygon id="radarBaselinePoly" fill="url(#lightSpiderBaseline)" points="170,158 190.8,158 201.2,188 170,184.4 144,185 149.2,158" stroke="#10b981" stroke-width="2"></polygon>
+
+                  <!-- Mutated Live Polygon (Red/Accent Drift) -->
+                  <polygon id="radarLivePoly" fill="url(#lightSpiderDrift)" points="170,158 190.8,158 201.2,188 170,184.4 144,185 149.2,158" stroke="#ef4444" stroke-width="2.5"></polygon>
+
+                  <!-- Axis Labels -->
+                  <text fill="#111827" font-family="'Plus Jakarta Sans'" font-size="10px" font-weight="700" text-anchor="middle" x="170" y="38">AST EXECUTION</text>
+                  <text fill="#111827" font-family="'Plus Jakarta Sans'" font-size="10px" font-weight="700" text-anchor="start" x="282" y="106">PRIVILEGE</text>
+                  <text fill="#6b7280" font-family="'Plus Jakarta Sans'" font-size="10px" font-weight="600" text-anchor="start" x="282" y="234">SCHEMA DIFF</text>
+                  <text fill="#111827" font-family="'Plus Jakarta Sans'" font-size="10px" font-weight="700" text-anchor="middle" x="170" y="308">SECRET LEAK</text>
+                  <text fill="#6b7280" font-family="'Plus Jakarta Sans'" font-size="10px" font-weight="600" text-anchor="end" x="58" y="234">CANARY FUZZ</text>
+                  <text fill="#111827" font-family="'Plus Jakarta Sans'" font-size="10px" font-weight="700" text-anchor="end" x="58" y="106">PROMPT HIJACK</text>
+                </svg>
+              </div>
+
+              <!-- Legend -->
+              <div class="flex items-center gap-4 mt-2 font-mono text-[11px]">
+                <span class="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Approved Baseline
+                </span>
+                <span class="flex items-center gap-1.5 text-red-700 bg-red-50 px-2.5 py-0.5 rounded-full border border-red-200">
+                  <span class="w-2 h-2 rounded-full bg-alert-red"></span> Live Scan
+                </span>
+              </div>
+            </div>
+
+            <!-- Micro Scorecard & Key Stats (4 cols) -->
+            <div class="md:col-span-4 flex flex-col justify-between h-full gap-3">
+              <div class="bg-zinc-50 rounded-2xl p-4 border border-zinc-100 flex flex-col items-center justify-center text-center">
+                <span class="text-[11px] font-mono uppercase tracking-wider text-txt-muted mb-1">Overall Security Posture</span>
+                <div class="flex items-baseline gap-1 my-1">
+                  <span id="scoreDisplay" class="text-[44px] font-extrabold text-emerald-600 tracking-tight leading-none">100</span>
+                  <span class="text-sm font-mono text-txt-subtle">/ 100</span>
+                </div>
+                <span id="gradeBadge" class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono text-[11px] font-bold">Grade A+ (Clean)</span>
+
+                <div class="w-full bg-white rounded-xl p-2.5 mt-3 border border-zinc-200/60 flex items-center justify-between text-[11px] font-mono">
+                  <div class="text-left">
+                    <span class="text-txt-subtle block text-[10px]">Baseline Score</span>
+                    <span id="baselineScoreText" class="text-emerald-600 font-bold">100 (A+)</span>
+                  </div>
+                  <div class="h-6 w-px bg-zinc-200"></div>
+                  <div class="text-right">
+                    <span class="text-txt-subtle block text-[10px]">Net Mutation</span>
+                    <span id="netMutationText" class="text-emerald-600 font-bold">0 pts</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stacked stats -->
+              <div class="bg-zinc-50 rounded-2xl p-3.5 border border-zinc-100 flex flex-col gap-2 font-mono text-[11.5px]">
+                <div class="flex items-center justify-between py-1 border-b border-zinc-200/50">
+                  <span class="text-txt-muted">Max Drift Surge</span>
+                  <span id="maxDriftText" class="font-bold text-emerald-600">None (0%)</span>
+                </div>
+                <div class="flex items-center justify-between py-1 border-b border-zinc-200/50">
+                  <span class="text-txt-muted">Canary Traps</span>
+                  <span id="canaryTrapsText" class="font-bold text-txt-main">0 Tripped</span>
+                </div>
+                <div class="flex items-center justify-between py-1">
+                  <span class="text-txt-muted">Merkle Status</span>
+                  <span id="merkleStatusText" class="font-bold text-emerald-600">VERIFIED_CLEAN</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Severity Stacked Bar -->
+          <div class="mt-4 pt-4 border-t border-zinc-100">
+            <div class="flex items-center justify-between text-xs font-medium text-txt-muted mb-2">
+              <span>Findings Severity Distribution (<span id="totalFindingsLabel">0</span> Active)</span>
+              <span id="findingsAlertText" class="font-semibold text-emerald-600">Clean Server Baseline</span>
+            </div>
+            <div class="w-full h-2.5 bg-zinc-100 rounded-full overflow-hidden flex gap-0.5">
+              <div id="barCrit" class="h-full bg-alert-red transition-all" style="width: 0%" title="0 Critical"></div>
+              <div id="barHigh" class="h-full bg-alert-amber transition-all" style="width: 0%" title="0 High"></div>
+              <div id="barMed" class="h-full bg-zinc-700 transition-all" style="width: 0%" title="0 Medium"></div>
+              <div id="barLow" class="h-full bg-emerald-500 transition-all" style="width: 100%" title="Clean"></div>
+              <div id="barInfo" class="h-full bg-zinc-300 transition-all" style="width: 0%" title="0 Info"></div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between mt-2 font-mono text-[11px] text-txt-muted">
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-alert-red"></span><span id="cntCritLabel">0</span> Critical</span>
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-alert-amber"></span><span id="cntHighLabel">0</span> High</span>
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-zinc-700"></span><span id="cntMedLabel">0</span> Medium</span>
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span id="cntLowLabel">0</span> Low</span>
+              <span class="flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-zinc-300"></span><span id="cntInfoLabel">0</span> Info</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 4-Cols: MCP Asset Scope Cards -->
+        <div class="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+          <!-- Tile A: Registered MCP Tools -->
+          <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <div class="w-9 h-9 rounded-2xl bg-zinc-100 text-txt-main flex items-center justify-center">
+                <span class="material-symbols-outlined text-[20px]">construction</span>
+              </div>
+              <span class="font-mono text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-semibold">100% hooked</span>
+            </div>
+            <div class="my-2">
+              <div id="scopeToolCount" class="text-[28px] font-bold text-txt-main">0 Tools</div>
+              <div class="text-xs text-txt-muted">Active MCP Interface Manifest</div>
+            </div>
+            <div id="scopeToolNames" class="text-[11px] font-mono text-txt-subtle truncate">
+              Ready to discover
+            </div>
+          </div>
+
+          <!-- Tile B: Unverified Capabilities -->
+          <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <div class="w-9 h-9 rounded-2xl bg-red-50 text-alert-red flex items-center justify-center">
+                <span class="material-symbols-outlined text-[20px]">warning</span>
+              </div>
+              <span id="scopeRiskLevel" class="font-mono text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold">Secure</span>
+            </div>
+            <div class="my-2">
+              <div id="scopeUnsafeCount" class="text-[28px] font-bold text-txt-main">0 Unsafe</div>
+              <div class="text-xs text-txt-muted">Untrusted Injected Endpoints</div>
+            </div>
+            <div id="scopeReconciliationText" class="text-[11px] font-mono text-txt-subtle">
+              Cryptographic pin synchronized
+            </div>
+          </div>
+
+          <!-- Tile C: Cryptographic Pin Hash -->
+          <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <div class="w-9 h-9 rounded-2xl bg-accent-lime/40 text-dark-dock flex items-center justify-center font-bold">
+                <span class="material-symbols-outlined text-[20px]">tag</span>
+              </div>
+              <button class="text-txt-muted hover:text-txt-main flex items-center gap-1 text-[11px] font-mono" id="copyHashBtn" onclick="copyLedgerHash()">
+                <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                <span>Copy</span>
               </button>
             </div>
-            <div class="overflow-x-auto max-h-64 overflow-y-auto">
-              <table class="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr class="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-mono">
-                    <th class="p-2">S3 Key / Report File</th>
-                    <th class="p-2">Size</th>
-                    <th class="p-2">Mode</th>
-                  </tr>
-                </thead>
-                <tbody id="s3ReportsTableBody" class="divide-y divide-slate-800/80 font-mono">
-                  <tr><td colspan="3" class="p-3 text-center text-slate-500">Loading S3 objects...</td></tr>
-                </tbody>
-              </table>
+            <div class="my-2">
+              <div class="text-xs text-txt-muted font-medium">Merkle Root Pin</div>
+              <div id="scopePinHash" class="text-[13px] font-mono font-bold text-txt-main truncate mt-0.5">sha256:none</div>
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono">
+              <span class="text-txt-muted">Runtime Status:</span>
+              <span id="scopeRuntimeStatus" class="text-emerald-600 font-bold">VERIFIED</span>
             </div>
           </div>
         </div>
       </div>
 
-    </div>
+      <!-- SECTION 3: 4-PILLAR SECURITY MATRIX -->
+      <div>
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-dark-dock"></span>
+            <h3 class="text-[18px] font-bold text-txt-main">Audit Pillar Matrix</h3>
+            <span class="text-xs font-mono text-txt-muted">// Real-Time Multi-Engine Verification</span>
+          </div>
+          <span class="text-xs font-mono text-txt-muted" id="lastPassTimeLabel">Ready</span>
+        </div>
 
-  </main>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <!-- Pillar 01: Static AST & Secret Scan -->
+          <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-txt-main bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">PILLAR 01</span>
+                <span id="pillar1Dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+              <h4 class="text-[15px] font-bold text-txt-main mb-1">Static AST &amp; Secret Scan</h4>
+              <p class="text-[12px] text-txt-muted mb-4 leading-relaxed">Python/Node AST traversal for unshielded system calls &amp; exposed tokens.</p>
+              
+              <div id="pillar1Findings" class="space-y-2">
+                <div class="bg-zinc-50 rounded-2xl p-3 border border-zinc-100 text-xs font-mono text-txt-muted">
+                  Awaiting scan execution...
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-[11px] font-mono">
+              <span class="text-txt-muted">AST Engine Status:</span>
+              <span id="pillar1Status" class="text-emerald-600 font-bold">READY</span>
+            </div>
+          </div>
+
+          <!-- Pillar 02: Prompt & Description Guard -->
+          <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-txt-main bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">PILLAR 02</span>
+                <span id="pillar2Dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+              <h4 class="text-[15px] font-bold text-txt-main mb-1">Prompt &amp; Description Guard</h4>
+              <p class="text-[12px] text-txt-muted mb-4 leading-relaxed">Heuristic token scrutiny targeting system prompt jailbreaks &amp; exfiltration prompts.</p>
+              
+              <div id="pillar2Findings" class="space-y-2">
+                <div class="bg-zinc-50 rounded-2xl p-3 border border-zinc-100 text-xs font-mono text-txt-muted">
+                  Awaiting scan execution...
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-[11px] font-mono">
+              <span class="text-txt-muted">Prompt Drift:</span>
+              <span id="pillar2Status" class="text-emerald-600 font-bold">0% Clean</span>
+            </div>
+          </div>
+
+          <!-- Pillar 03: Dynamic Canary Fuzzing -->
+          <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-dark-dock bg-accent-lime px-2 py-0.5 rounded-full">PILLAR 03</span>
+                <span id="pillar3Dot" class="w-2 h-2 rounded-full bg-accent-lime-dark"></span>
+              </div>
+              <h4 class="text-[15px] font-bold text-txt-main mb-1">Dynamic Canary Fuzzing</h4>
+              <p class="text-[12px] text-txt-muted mb-4 leading-relaxed">Active JSON-RPC payloads sent via isolated stdio pipes with synthetic honeypots.</p>
+              
+              <div id="pillar3Findings" class="space-y-2">
+                <div class="bg-zinc-50 rounded-2xl p-3 border border-zinc-100 text-xs font-mono text-txt-muted">
+                  Awaiting scan execution...
+                </div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-[11px] font-mono">
+              <span class="text-txt-muted">Mean Response:</span>
+              <span id="pillar3Status" class="text-emerald-600 font-bold">0 ms</span>
+            </div>
+          </div>
+
+          <!-- Pillar 04: Merkle Cryptographic Pin -->
+          <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-[11px] font-mono font-bold uppercase tracking-wider text-txt-main bg-zinc-100 px-2 py-0.5 rounded-full border border-zinc-200">PILLAR 04</span>
+                <span id="pillar4Dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              </div>
+              <h4 class="text-[15px] font-bold text-txt-main mb-1">Crypto Pin &amp; Rug Guard</h4>
+              <p class="text-[12px] text-txt-muted mb-4 leading-relaxed">Merkle tree hash tracking comparing verified commit hashes against runtime MCP schemas.</p>
+              
+              <div class="bg-zinc-50 rounded-2xl p-3 mb-2 border border-zinc-100">
+                <div class="flex items-center justify-between text-xs font-mono text-txt-muted mb-1">
+                  <span>Baseline Approved</span>
+                  <span id="pillar4BaseStatus" class="text-emerald-600 font-bold">Pinned</span>
+                </div>
+                <div id="pillar4BaselineHash" class="text-[11px] font-mono text-txt-main truncate">sha256:none</div>
+              </div>
+
+              <div class="bg-zinc-50 rounded-2xl p-3 border border-zinc-100">
+                <div class="flex items-center justify-between text-xs font-mono text-txt-muted mb-1">
+                  <span>Live Runtime Hash</span>
+                  <span id="pillar4LiveStatus" class="font-bold text-emerald-600">MATCH</span>
+                </div>
+                <div id="pillar4LiveHash" class="text-[11px] font-mono text-txt-main truncate">sha256:none</div>
+              </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-[11px] font-mono">
+              <span class="text-txt-muted">Integrity:</span>
+              <span id="pillar4Status" class="text-emerald-600 font-bold">VERIFIED</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: RUG-PULL DEMO STUDIO & HIGH CONTRAST SCHEMA DIFF -->
+      <div class="bg-white rounded-3xl p-6 border border-border-subtle shadow-subtle" id="rugpull-studio">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5 pb-3 border-b border-zinc-100">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-zinc-100 text-txt-main flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">compare</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-[18px] font-bold text-txt-main">Rug-Pull Studio: Schema Mutation Diff</h3>
+                <span id="rugPullStudioTag" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">Interactive Lab</span>
+              </div>
+              <p class="text-[12.5px] text-txt-muted">Live comparison revealing backdoor tools &amp; hijacked prompt injections introduced post-authorization.</p>
+            </div>
+          </div>
+
+          <!-- Mode Toggle Pill Bar -->
+          <div class="flex items-center bg-zinc-100 p-1 rounded-full text-[12px] font-mono">
+            <button class="px-3.5 py-1.5 rounded-full text-txt-muted hover:text-txt-main transition-all" id="btnViewBaseline" onclick="switchDiffMode('baseline')">Baseline Only</button>
+            <button class="px-3.5 py-1.5 rounded-full text-txt-muted hover:text-txt-main transition-all" id="btnViewLive" onclick="switchDiffMode('live')">Live Only</button>
+            <button class="px-3.5 py-1.5 rounded-full bg-dark-dock text-white font-semibold shadow-pill transition-all" id="btnViewDiff" onclick="switchDiffMode('diff')">Side-by-Side Unified Diff</button>
+          </div>
+        </div>
+
+        <!-- 3-Step Live Demo Action Strip -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5 p-3 bg-zinc-50 rounded-2xl border border-zinc-200/60 font-mono text-xs">
+          <button onclick="setRugPullVersion('1', true)" class="p-3 bg-white hover:bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 font-semibold transition flex flex-col gap-1 text-left shadow-sm">
+            <span class="text-[10px] font-bold text-emerald-600 uppercase">STEP 1</span>
+            <span>📌 Pin Baseline v1 (Safe Notes App)</span>
+            <span class="text-[10px] text-txt-muted font-normal font-sans">Pins clean SHA-256 fingerprint in SQLite</span>
+          </button>
+
+          <button onclick="setRugPullVersion('2', false)" class="p-3 bg-white hover:bg-red-50 text-alert-red rounded-xl border border-red-200 font-semibold transition flex flex-col gap-1 text-left shadow-sm">
+            <span class="text-[10px] font-bold text-alert-red uppercase">STEP 2</span>
+            <span>⚡ Simulate Live Rug-Pull (v2)</span>
+            <span class="text-[10px] text-txt-muted font-normal font-sans">Adds stealth tool &amp; poisons prompt</span>
+          </button>
+
+          <button onclick="selectAndScanRugPull()" class="p-3 bg-dark-dock hover:bg-zinc-800 text-white rounded-xl font-semibold transition flex flex-col gap-1 text-left shadow-sm">
+            <span class="text-[10px] font-bold text-accent-lime uppercase">STEP 3</span>
+            <span>🔍 Audit Rug-Pull Server</span>
+            <span class="text-[10px] text-zinc-400 font-normal font-sans">DeepDiff flags the unapproved mutations</span>
+          </button>
+        </div>
+
+        <!-- Clean Code Diff Box -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Left: Baseline Approved (Clean) -->
+          <div id="diffBaselineCol" class="bg-zinc-50/70 rounded-2xl p-4 border border-zinc-200/80 flex flex-col">
+            <div class="flex items-center justify-between pb-3 mb-2 border-b border-zinc-200">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <span class="font-mono text-xs font-bold text-txt-main">Baseline (Approved Signed State)</span>
+              </div>
+              <span id="diffBaseHashLabel" class="text-[11px] font-mono text-txt-muted">sha256:none</span>
+            </div>
+            <pre id="diffBaselinePre" class="font-mono text-[12px] leading-5 text-zinc-800 bg-white p-4 rounded-xl border border-zinc-200/60 overflow-x-auto select-all max-h-72 overflow-y-auto"><span class="text-zinc-400"># Approved Baseline Manifest in SQLite</span>
+{
+  <span class="text-blue-600 font-semibold">"tools"</span>: [
+    {
+      <span class="text-blue-600 font-semibold">"name"</span>: <span class="text-emerald-700">"fetch_weather"</span>,
+      <span class="text-blue-600 font-semibold">"description"</span>: <span class="text-zinc-800">"Returns meteorological readings for given zip."</span>
+    }
+  ]
+}</pre>
+          </div>
+
+          <!-- Right: Mutated Live Runtime (Tampered) -->
+          <div id="diffLiveCol" class="bg-red-50/40 rounded-2xl p-4 border border-red-200 flex flex-col">
+            <div class="flex items-center justify-between pb-3 mb-2 border-b border-red-200">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-alert-red animate-ping"></span>
+                <span class="font-mono text-xs font-bold text-alert-red">Runtime Live (Current State)</span>
+              </div>
+              <span id="diffLiveHashLabel" class="text-[11px] font-mono text-alert-red font-bold">sha256:live</span>
+            </div>
+            <pre id="diffLivePre" class="font-mono text-[12px] leading-5 text-zinc-800 bg-white p-4 rounded-xl border border-red-200 overflow-x-auto select-all max-h-72 overflow-y-auto"><span class="text-zinc-400"># Live Runtime MCP Manifest</span>
+{
+  <span class="text-blue-600 font-semibold">"tools"</span>: [
+    {
+      <span class="text-blue-600 font-semibold">"name"</span>: <span class="text-emerald-700">"fetch_weather"</span>,
+      <span class="text-blue-600 font-semibold">"description"</span>: <span class="text-zinc-800">"Returns weather..."</span>
+    }
+  ]
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 5: FINDINGS & SECURITY RULES (ACCORDION TABLE) -->
+      <div class="bg-white rounded-3xl p-6 border border-border-subtle shadow-subtle" id="findings-section">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 class="text-[18px] font-bold text-txt-main">Findings &amp; Security Rules</h3>
+            <p class="text-[12.5px] text-txt-muted">Prioritized remediation queue ordered by CVSS exploitability vector.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center bg-zinc-50 border border-zinc-200 px-3 py-1.5 rounded-full">
+              <span class="material-symbols-outlined text-[16px] text-txt-subtle mr-1.5">search</span>
+              <input id="findingSearchInput" oninput="filterFindings()" class="bg-transparent text-xs text-txt-main focus:outline-none w-44 placeholder:text-txt-subtle font-sans" placeholder="Filter rules or files..." type="text">
+            </div>
+            <div class="flex items-center bg-zinc-100 p-1 rounded-full text-xs font-mono">
+              <button onclick="setFindingFilter('ALL')" id="filterBtnAll" class="px-3 py-1 rounded-full bg-white text-txt-main font-semibold shadow-pill">All (<span id="filterCountAll">0</span>)</button>
+              <button onclick="setFindingFilter('CRITICAL')" id="filterBtnCrit" class="px-3 py-1 text-alert-red hover:text-red-700 transition-colors font-semibold">Crit (<span id="filterCountCrit">0</span>)</button>
+              <button onclick="setFindingFilter('HIGH')" id="filterBtnHigh" class="px-3 py-1 text-alert-amber hover:text-amber-700 transition-colors font-semibold">High (<span id="filterCountHigh">0</span>)</button>
+              <button onclick="setFindingFilter('MEDIUM')" id="filterBtnMed" class="px-3 py-1 text-txt-muted hover:text-txt-main transition-colors">Med (<span id="filterCountMed">0</span>)</button>
+              <button onclick="setFindingFilter('LOW')" id="filterBtnLow" class="px-3 py-1 text-emerald-600 hover:text-emerald-700 transition-colors">Low (<span id="filterCountLow">0</span>)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion findings list -->
+        <div class="flex flex-col gap-2.5" id="findingsList">
+          <div class="p-8 text-center bg-zinc-50 rounded-2xl border border-zinc-200/60 text-txt-muted text-xs font-mono">
+            Click "Run Full Audit" above to scan the target server.
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 6: LIVE DYNAMIC PROBING TRACES (WATERFALL NETWORK LOG) -->
+      <div class="bg-white rounded-3xl p-6 border border-border-subtle shadow-subtle" id="probing-traces-section">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div class="flex items-center gap-2.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <h3 class="text-[18px] font-bold text-txt-main">Dynamic Probing Traces</h3>
+            <span class="text-xs font-mono text-txt-muted">// JSON-RPC stdio Canary Waterfall</span>
+          </div>
+          <div class="flex items-center gap-3 font-mono text-xs text-txt-muted">
+            <span class="text-emerald-700 font-semibold flex items-center gap-1">● Live Interceptor Attached</span>
+            <span>|</span>
+            <span id="traceBufferLabel">0 traces recorded</span>
+          </div>
+        </div>
+
+        <!-- Traces Rows -->
+        <div id="dynamicTracesRows" class="flex flex-col gap-2 font-mono text-xs">
+          <div class="p-6 text-center bg-zinc-50 rounded-2xl border border-zinc-200/60 text-txt-muted">
+            No dynamic traces recorded yet. Run Full Audit to probe tools over stdio JSON-RPC.
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 7: EXPORT & AWS S3 CLOUD SYNC -->
+      <div class="bg-white rounded-3xl p-6 border border-border-subtle shadow-subtle space-y-6" id="reports-s3-section">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-3 border-b border-zinc-100">
+          <div class="flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-2xl bg-zinc-100 text-txt-main flex items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-[22px]">cloud_sync</span>
+            </div>
+            <div>
+              <span class="text-[18px] font-bold text-txt-main block">Export Reports &amp; AWS S3 Cloud Vault</span>
+              <span class="text-[12px] text-txt-muted">Generate compliance reports and synchronize SQLite fingerprint baselines directly to AWS S3.</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 font-mono text-xs">
+            <span id="s3VaultModeBadge" class="px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold">Local S3 Simulation</span>
+          </div>
+        </div>
+
+        <!-- Report Download Action Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- HTML Executive Report -->
+          <div class="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 flex flex-col justify-between hover:bg-zinc-100/70 transition">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="material-symbols-outlined text-[24px] text-emerald-700">web</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-100 text-emerald-800 font-bold uppercase">Executive</span>
+              </div>
+              <h4 class="text-sm font-bold text-txt-main mt-2">Executive HTML Report</h4>
+              <p class="text-xs text-txt-muted mt-1 leading-relaxed">Full-color printable report with CVSS gauges, severity breakdown, and remediation plan.</p>
+            </div>
+            <div class="pt-3 border-t border-zinc-200 mt-3 space-y-2 font-mono text-xs">
+              <button onclick="downloadReport('html')" class="w-full py-2 bg-dark-dock text-white rounded-xl font-semibold hover:bg-zinc-800 transition flex items-center justify-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-[15px] text-accent-lime">download</span>
+                <span>Download .HTML</span>
+              </button>
+              <button onclick="previewReport('html')" class="w-full py-1.5 bg-white text-txt-main rounded-xl font-medium border border-border-soft hover:bg-zinc-50 transition flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                <span>Preview</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- OASIS SARIF 2.1.0 -->
+          <div class="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 flex flex-col justify-between hover:bg-zinc-100/70 transition">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="material-symbols-outlined text-[24px] text-blue-700">policy</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-100 text-blue-800 font-bold uppercase">OASIS</span>
+              </div>
+              <h4 class="text-sm font-bold text-txt-main mt-2">OASIS SARIF 2.1.0</h4>
+              <p class="text-xs text-txt-muted mt-1 leading-relaxed">Industry-standard static analysis format for GitHub Code Scanning, SonarQube, and CI gates.</p>
+            </div>
+            <div class="pt-3 border-t border-zinc-200 mt-3 space-y-2 font-mono text-xs">
+              <button onclick="downloadReport('sarif')" class="w-full py-2 bg-dark-dock text-white rounded-xl font-semibold hover:bg-zinc-800 transition flex items-center justify-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-[15px] text-accent-lime">download</span>
+                <span>Download .SARIF</span>
+              </button>
+              <button onclick="previewReport('sarif')" class="w-full py-1.5 bg-white text-txt-main rounded-xl font-medium border border-border-soft hover:bg-zinc-50 transition flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">data_object</span>
+                <span>View JSON</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Markdown Audit Report -->
+          <div class="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 flex flex-col justify-between hover:bg-zinc-100/70 transition">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="material-symbols-outlined text-[24px] text-amber-700">description</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-100 text-amber-800 font-bold uppercase">Markdown</span>
+              </div>
+              <h4 class="text-sm font-bold text-txt-main mt-2">Developer Markdown</h4>
+              <p class="text-xs text-txt-muted mt-1 leading-relaxed">Comprehensive Markdown summary with CVSS scoring tables, evidence snippets, and fixes.</p>
+            </div>
+            <div class="pt-3 border-t border-zinc-200 mt-3 space-y-2 font-mono text-xs">
+              <button onclick="downloadReport('markdown')" class="w-full py-2 bg-dark-dock text-white rounded-xl font-semibold hover:bg-zinc-800 transition flex items-center justify-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-[15px] text-accent-lime">download</span>
+                <span>Download .MD</span>
+              </button>
+              <button onclick="previewReport('markdown')" class="w-full py-1.5 bg-white text-txt-main rounded-xl font-medium border border-border-soft hover:bg-zinc-50 transition flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">visibility</span>
+                <span>View MD</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Raw Schema JSON -->
+          <div class="p-4 bg-zinc-50 rounded-2xl border border-zinc-200/80 flex flex-col justify-between hover:bg-zinc-100/70 transition">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="material-symbols-outlined text-[24px] text-purple-700">code</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-100 text-purple-800 font-bold uppercase">Telemetry</span>
+              </div>
+              <h4 class="text-sm font-bold text-txt-main mt-2">Raw JSON Telemetry</h4>
+              <p class="text-xs text-txt-muted mt-1 leading-relaxed">Complete scan payload with tool schemas, AST node details, and prober canary traces.</p>
+            </div>
+            <div class="pt-3 border-t border-zinc-200 mt-3 space-y-2 font-mono text-xs">
+              <button onclick="downloadReport('json')" class="w-full py-2 bg-dark-dock text-white rounded-xl font-semibold hover:bg-zinc-800 transition flex items-center justify-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-[15px] text-accent-lime">download</span>
+                <span>Download .JSON</span>
+              </button>
+              <button onclick="copyReportJson()" class="w-full py-1.5 bg-white text-txt-main rounded-xl font-medium border border-border-soft hover:bg-zinc-50 transition flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                <span>Copy JSON</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- AWS S3 & SQLite Synchronization Panel -->
+        <div class="p-5 bg-zinc-50 rounded-2xl border border-zinc-200/80 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[20px] text-txt-main">cloud</span>
+              <h4 class="text-sm font-bold text-txt-main">AWS S3 Bucket &amp; SQLite Cloud Controls</h4>
+            </div>
+
+            <!-- Target S3 Bucket Input Pill -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono text-txt-muted">Target Bucket:</span>
+              <input id="s3BucketInput" type="text" value="mcp-security-auditor-vault" class="px-3 py-1 bg-white border border-border-soft rounded-full text-xs font-mono text-txt-main focus:outline-none focus:border-dark-dock shadow-pill w-56">
+              <button onclick="refreshS3Status()" class="px-3 py-1 bg-white hover:bg-zinc-100 border border-border-soft text-txt-main text-xs font-mono rounded-full shadow-pill transition" title="Refresh S3 Status">
+                Apply
+              </button>
+            </div>
+          </div>
+
+          <!-- S3 Actions Pill Buttons -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono text-xs">
+            <button onclick="syncSQLiteToS3()" class="py-2.5 px-4 bg-dark-dock hover:bg-zinc-800 text-white rounded-xl font-semibold transition flex items-center justify-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[17px] text-accent-lime">cloud_upload</span>
+              <span>Sync SQLite to S3</span>
+            </button>
+
+            <button onclick="pullSQLiteFromS3()" class="py-2.5 px-4 bg-white hover:bg-zinc-100 text-txt-main border border-border-soft rounded-xl font-semibold transition flex items-center justify-center gap-2 shadow-pill">
+              <span class="material-symbols-outlined text-[17px] text-txt-muted">cloud_download</span>
+              <span>Restore SQLite from S3</span>
+            </button>
+
+            <button onclick="archiveCurrentReportToS3()" class="py-2.5 px-4 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-semibold transition flex items-center justify-center gap-2 shadow-sm">
+              <span class="material-symbols-outlined text-[17px]">inventory_2</span>
+              <span>Archive Report to S3</span>
+            </button>
+          </div>
+
+          <!-- S3 Action Feedback Alert -->
+          <div id="s3ActionAlert" class="hidden text-xs font-mono p-3 rounded-xl border"></div>
+
+          <!-- History & S3 Objects Lists -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
+            <!-- SQLite Audit History -->
+            <div class="bg-white p-4 rounded-xl border border-zinc-200/80 space-y-2">
+              <div class="flex items-center justify-between pb-2 border-b border-zinc-100">
+                <span class="text-xs font-bold text-txt-main flex items-center gap-1.5 font-mono">
+                  <span class="material-symbols-outlined text-[15px]">database</span> SQLite Audit History
+                </span>
+                <button onclick="loadScanHistory()" class="text-[11px] font-mono text-txt-muted hover:text-txt-main">Refresh</button>
+              </div>
+              <div class="overflow-x-auto max-h-48 overflow-y-auto">
+                <table class="w-full text-left text-[11px] font-mono">
+                  <thead>
+                    <tr class="text-txt-muted border-b border-zinc-100">
+                      <th class="pb-1.5">Server</th>
+                      <th class="pb-1.5">Score</th>
+                      <th class="pb-1.5">Findings</th>
+                      <th class="pb-1.5">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody id="scanHistoryTableBody" class="divide-y divide-zinc-100 text-zinc-700">
+                    <tr><td colspan="4" class="py-3 text-center text-txt-subtle">No historical scans recorded yet.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- S3 Bucket File Vault -->
+            <div class="bg-white p-4 rounded-xl border border-zinc-200/80 space-y-2">
+              <div class="flex items-center justify-between pb-2 border-b border-zinc-100">
+                <span class="text-xs font-bold text-txt-main flex items-center gap-1.5 font-mono">
+                  <span class="material-symbols-outlined text-[15px]">folder_zip</span> S3 Bucket Object Vault
+                </span>
+                <button onclick="loadS3ReportsList()" class="text-[11px] font-mono text-txt-muted hover:text-txt-main">Refresh</button>
+              </div>
+              <div class="overflow-x-auto max-h-48 overflow-y-auto">
+                <table class="w-full text-left text-[11px] font-mono">
+                  <thead>
+                    <tr class="text-txt-muted border-b border-zinc-100">
+                      <th class="pb-1.5">S3 Key / File</th>
+                      <th class="pb-1.5">Size</th>
+                      <th class="pb-1.5">Mode</th>
+                    </tr>
+                  </thead>
+                  <tbody id="s3ReportsTableBody" class="divide-y divide-zinc-100 text-zinc-700">
+                    <tr><td colspan="3" class="py-3 text-center text-txt-subtle">No archived files in S3 vault yet.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- LIGHT AIRY FOOTER -->
+    <footer class="mt-6 py-4 border-t border-border-subtle flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono text-txt-muted">
+      <div class="flex flex-wrap items-center gap-4">
+        <span class="flex items-center gap-1 text-zinc-500">
+          <span class="material-symbols-outlined text-[15px]">fingerprint</span>
+          <span>Fingerprint:</span>
+          <span id="footerHash" class="text-txt-main font-semibold">sha256:e3b0c44...</span>
+        </span>
+        <span class="flex items-center gap-1 text-zinc-500">
+          <span class="material-symbols-outlined text-[15px]">sync_alt</span>
+          <span>Protocol:</span>
+          <span class="text-txt-main font-semibold">MCP v2024-11-05</span>
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 text-[11px] font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> stdio JSON-RPC: ACTIVE
+        </span>
+        <span class="text-zinc-300">|</span>
+        <span>Schema Verifier: v1.8.2-auric</span>
+      </div>
+    </footer>
+
+  </div>
 
   <script>
     let currentReport = null;
     let currentTraces = [];
     let availableServers = [];
+    let activeFindingFilter = 'ALL';
+
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
 
     async function loadServers() {
       try {
         const res = await fetch('/api/servers');
         const data = await res.json();
-        availableServers = data.servers;
+        availableServers = data.servers || [];
         const select = document.getElementById('serverSelect');
         select.innerHTML = availableServers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
         onServerChange();
@@ -518,18 +1091,35 @@
       const s = availableServers.find(x => x.id === select.value);
       if (s) {
         document.getElementById('serverPathInput').value = s.path;
-        document.getElementById('targetDescription').innerText = s.description;
+        document.getElementById('activeServerNameLabel').innerText = s.id;
+        const tag = document.getElementById('activeServerTag');
+        if (s.id.includes('poisoned')) {
+          tag.innerText = "POISONED";
+          tag.className = "px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-amber-50 text-amber-700 border border-amber-200 font-bold";
+        } else if (s.id.includes('vulnerable')) {
+          tag.innerText = "VULNERABLE";
+          tag.className = "px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-red-50 text-alert-red border border-red-200 font-bold";
+        } else if (s.id.includes('rug_pull')) {
+          tag.innerText = "MUTATING";
+          tag.className = "px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-purple-50 text-purple-700 border border-purple-200 font-bold";
+        } else {
+          tag.innerText = "CLEAN";
+          tag.className = "px-2 py-0.5 rounded-full text-[10px] font-mono uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold";
+        }
       }
     }
 
     async function triggerScan(pinBaseline = false) {
       const path = document.getElementById('serverPathInput').value;
-      if (!path) return alert("Please specify a server path.");
+      if (!path) return alert("Please specify or select a server path first.");
 
       const scanBtn = document.getElementById('scanBtn');
       const spinner = document.getElementById('scanSpinner');
+      const playIcon = document.getElementById('scanPlayIcon');
+
       scanBtn.disabled = true;
-      spinner.classList.remove('hidden');
+      if (spinner) spinner.classList.remove('hidden');
+      if (playIcon) playIcon.classList.add('hidden');
 
       const useLM = document.getElementById('useLMStudioCheck')?.checked ?? true;
       try {
@@ -551,128 +1141,470 @@
 
         const data = await res.json();
         currentReport = data.report;
-        currentTraces = data.traces;
+        currentTraces = data.traces || [];
         renderReport();
         loadPins();
+        loadScanHistory();
+        loadS3ReportsList();
       } catch (e) {
         alert("Failed to execute scan: " + e);
       } finally {
         scanBtn.disabled = false;
-        spinner.classList.add('hidden');
+        if (spinner) spinner.classList.add('hidden');
+        if (playIcon) playIcon.classList.remove('hidden');
       }
     }
 
     function renderReport() {
       if (!currentReport) return;
 
-      // Metrics
-      document.getElementById('scoreDisplay').innerHTML = `${currentReport.security_score}<span class="text-xs font-normal text-slate-400">/100</span>`;
-      const gradeBadge = document.getElementById('gradeBadge');
-      gradeBadge.innerText = currentReport.grade;
-      gradeBadge.className = `mt-1 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-        currentReport.grade === 'A+' || currentReport.grade === 'A' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-        currentReport.grade === 'B' ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' :
-        currentReport.grade === 'C' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-        'bg-red-500/20 text-red-400 border border-red-500/30'
-      }`;
+      const summary = currentReport.summary || {};
+      const crit = summary['CRITICAL'] || 0;
+      const high = summary['HIGH'] || 0;
+      const med = summary['MEDIUM'] || 0;
+      const low = (summary['LOW'] || 0) + (summary['INFO'] || 0);
+      const total = currentReport.findings ? currentReport.findings.length : 0;
 
-      document.getElementById('cntCritical').innerText = currentReport.summary['CRITICAL'] || 0;
-      document.getElementById('cntHigh').innerText = currentReport.summary['HIGH'] || 0;
-      document.getElementById('cntMedium').innerText = currentReport.summary['MEDIUM'] || 0;
-      document.getElementById('cntLow').innerText = (currentReport.summary['LOW'] || 0) + (currentReport.summary['INFO'] || 0);
+      // 1. KPI Scorecards
+      document.getElementById('cntFindings').innerText = total;
+      document.getElementById('cntCriticalText').innerText = `/ ${crit} crit`;
+      document.getElementById('pillCritCount').innerText = `${crit} Crit`;
+      document.getElementById('pillCritCount').className = crit > 0 ? "px-1.5 py-0.2 rounded-full bg-red-100 text-red-700 text-[10px] font-bold" : "px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold";
+
+      document.getElementById('cntHighRisk').innerText = crit + high;
+      document.getElementById('lblRugPullStatus').innerText = currentReport.rug_pull_detected ? "/ RUG PULL" : "/ clean";
+      document.getElementById('lblRugPullStatus').className = currentReport.rug_pull_detected ? "text-xs text-alert-red font-bold font-mono" : "text-xs text-txt-subtle font-mono";
+
+      document.getElementById('cntProbes').innerText = currentTraces.length;
+      const failedProbes = currentTraces.filter(t => !t.success || t.finding_id).length;
+      document.getElementById('cntFailedProbes').innerText = `/ ${failedProbes} failed`;
+
       document.getElementById('cntTools').innerText = currentReport.tool_count || 0;
+      document.getElementById('kpiScorePill').innerText = `Score: ${currentReport.security_score}`;
 
-      // Rug-Pull Banner
+      // Scorecard 1 sparkline bar coloring
+      const rateBadge = document.getElementById('kpiAlertRateBadge');
+      if (crit > 0) {
+        rateBadge.className = "px-2 py-0.5 rounded-full bg-red-100 text-alert-red font-mono font-bold text-[11px] flex items-center gap-0.5";
+        rateBadge.innerHTML = `High Risk <span class="material-symbols-outlined text-[13px]">warning</span>`;
+      } else {
+        rateBadge.className = "px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5";
+        rateBadge.innerHTML = `Clean <span class="material-symbols-outlined text-[13px]">check</span>`;
+      }
+
+      // 2. Micro Scorecard & Radar
+      document.getElementById('scoreDisplay').innerText = currentReport.security_score;
+      document.getElementById('scoreDisplay').className = currentReport.security_score >= 80 ? "text-[44px] font-extrabold text-emerald-600 tracking-tight leading-none" : "text-[44px] font-extrabold text-alert-red tracking-tight leading-none";
+      
+      const gradeBadge = document.getElementById('gradeBadge');
+      gradeBadge.innerText = `Grade ${currentReport.grade}`;
+      gradeBadge.className = currentReport.grade.startsWith('A') 
+        ? "px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono text-[11px] font-bold"
+        : "px-2.5 py-0.5 rounded-full bg-red-100 text-alert-red font-mono text-[11px] font-bold";
+
+      const netMut = 100 - currentReport.security_score;
+      document.getElementById('netMutationText').innerText = `-${netMut} pts`;
+      document.getElementById('netMutationText').className = netMut > 0 ? "text-alert-red font-bold" : "text-emerald-600 font-bold";
+
+      document.getElementById('maxDriftText').innerText = crit > 0 ? `AST/Privilege (+${Math.min(100, crit * 30)}%)` : "None (0%)";
+      document.getElementById('maxDriftText').className = crit > 0 ? "font-bold text-alert-red" : "font-bold text-emerald-600";
+
+      document.getElementById('canaryTrapsText').innerText = `${failedProbes} / ${currentTraces.length || 0} Tripped`;
+      document.getElementById('merkleStatusText').innerText = currentReport.rug_pull_detected ? "TAMPERED_DIRTY" : "VERIFIED_CLEAN";
+      document.getElementById('merkleStatusText').className = currentReport.rug_pull_detected ? "font-bold text-alert-red" : "font-bold text-emerald-600";
+
+      // Radar SVG polygon recalculation
+      updateRadarDrift(currentReport);
+
+      // Severity Bar
+      document.getElementById('totalFindingsLabel').innerText = total;
+      document.getElementById('cntCritLabel').innerText = crit;
+      document.getElementById('cntHighLabel').innerText = high;
+      document.getElementById('cntMedLabel').innerText = med;
+      document.getElementById('cntLowLabel').innerText = low;
+      
+      const totSafe = total || 1;
+      document.getElementById('barCrit').style.width = `${(crit / totSafe) * 100}%`;
+      document.getElementById('barHigh').style.width = `${(high / totSafe) * 100}%`;
+      document.getElementById('barMed').style.width = `${(med / totSafe) * 100}%`;
+      document.getElementById('barLow').style.width = total === 0 ? "100%" : `${(low / totSafe) * 100}%`;
+
+      const alertTxt = document.getElementById('findingsAlertText');
+      if (crit > 0) {
+        alertTxt.innerText = `${crit} Critical Blockers Require Immediate Sign-Off`;
+        alertTxt.className = "font-semibold text-alert-red";
+      } else {
+        alertTxt.innerText = "All Security Checks Passing Cleanly";
+        alertTxt.className = "font-semibold text-emerald-600";
+      }
+
+      // Asset Scope Tiles
+      document.getElementById('scopeToolCount').innerText = `${currentReport.tool_count || 0} Tools`;
+      const toolNames = currentReport.tools && currentReport.tools.length > 0 ? currentReport.tools.map(t => t.name).join(', ') : 'None discovered';
+      document.getElementById('scopeToolNames').innerText = toolNames;
+
+      document.getElementById('scopeUnsafeCount').innerText = `${crit + high} Unsafe`;
+      document.getElementById('scopeUnsafeCount').className = (crit + high) > 0 ? "text-[28px] font-bold text-alert-red" : "text-[28px] font-bold text-emerald-600";
+
+      document.getElementById('scopeRiskLevel').innerText = crit > 0 ? "Alert Level 4" : "Secure Level 1";
+      document.getElementById('scopeRiskLevel').className = crit > 0 ? "font-mono text-[11px] text-alert-red bg-red-50 border border-red-200 px-2 py-0.5 rounded-full font-bold" : "font-mono text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full font-bold";
+
+      // Rug-Pull Alert Banner
       const banner = document.getElementById('rugPullBanner');
       if (currentReport.rug_pull_detected) {
         banner.classList.remove('hidden');
         const dt = currentReport.rug_pull_details;
-        let details = `Target Server: ${dt.server_id} | Previous Hash: ${dt.previous_hash.substring(0, 16)}... | Current Hash: ${dt.current_hash.substring(0, 16)}...\n`;
-        if (dt.added_tools && dt.added_tools.length) details += `🚨 Added Stealth Tools: ${dt.added_tools.join(', ')}\n`;
+        let details = `Target Server: ${dt.server_id} | Previous Hash: ${dt.previous_hash ? dt.previous_hash.substring(0, 16) : ''}... | Current Hash: ${dt.current_hash ? dt.current_hash.substring(0, 16) : ''}...\n`;
+        if (dt.added_tools && dt.added_tools.length) details += `🚨 Stealth Backdoor Tools: ${dt.added_tools.join(', ')}\n`;
         if (dt.removed_tools && dt.removed_tools.length) details += `⚠️ Removed Tools: ${dt.removed_tools.join(', ')}\n`;
-        if (dt.modified_tools && Object.keys(dt.modified_tools).length) details += `⚡ Modified Tools: ${Object.keys(dt.modified_tools).join(', ')}`;
+        if (dt.modified_tools && Object.keys(dt.modified_tools).length) details += `⚡ Tampered Tools: ${Object.keys(dt.modified_tools).join(', ')}`;
         document.getElementById('rugPullDetailsText').innerText = details;
+        document.getElementById('scopeRuntimeStatus').innerText = "TAMPERED_DIRTY";
+        document.getElementById('scopeRuntimeStatus').className = "text-alert-red font-bold";
       } else {
         banner.classList.add('hidden');
+        document.getElementById('scopeRuntimeStatus').innerText = "VERIFIED";
+        document.getElementById('scopeRuntimeStatus').className = "text-emerald-600 font-bold";
       }
 
-      // Findings List
-      const container = document.getElementById('findingsContainer');
-      document.getElementById('tabCountFindings').innerText = currentReport.findings.length;
-      if (currentReport.findings.length === 0) {
-        container.innerHTML = `
-          <div class="p-8 text-center bg-emerald-950/20 border border-emerald-500/30 rounded-lg">
-            <span class="text-3xl">✅</span>
-            <h3 class="text-emerald-400 font-bold mt-2">Zero Vulnerabilities Identified!</h3>
-            <p class="text-xs text-slate-400 mt-1">This server passed all static AST checks, Prompt Guard poisoning tests, and dynamic sandbox probes.</p>
-          </div>
-        `;
-      } else {
-        container.innerHTML = currentReport.findings.map(f => `
-          <div class="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2 hover:border-slate-700 transition">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold badge-${f.severity}">${f.severity}</span>
-                <span class="text-xs font-mono text-cyan-400 font-semibold">${f.id}</span>
-                <span class="text-sm font-semibold text-white">${f.title}</span>
-              </div>
-              <span class="text-xs text-slate-400 font-mono">${f.file_path ? f.file_path.split('\\').pop() : (f.tool_name || 'Global')}</span>
-            </div>
-            <div class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded border border-slate-800 font-mono whitespace-pre-wrap">${f.evidence}</div>
-            <div class="text-xs text-emerald-400 flex items-center gap-1">
-              <span class="font-bold">Recommended Fix:</span> ${f.remediation}
-            </div>
-          </div>
-        `).join('');
-      }
+      // 3. Render 4 Pillars
+      renderPillars();
 
-      // Prompt Guard Tab
-      const pgContainer = document.getElementById('promptGuardContainer');
-      if (!currentReport.tools || currentReport.tools.length === 0) {
-        pgContainer.innerHTML = '<p class="text-sm text-slate-400">No tools discovered on target server.</p>';
-      } else {
-        pgContainer.innerHTML = currentReport.tools.map(t => {
-          const desc = t.description || 'No description provided.';
-          const poisoned = desc.toLowerCase().includes('ignore') || desc.toLowerCase().includes('system') || desc.toLowerCase().includes('webhook');
-          return `
-            <div class="bg-slate-900 border ${poisoned ? 'border-red-500/40' : 'border-slate-800'} rounded-lg p-4 space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="font-mono text-sm font-bold ${poisoned ? 'text-red-400' : 'text-emerald-400'}">Tool: ${t.name}</span>
-                <span class="text-xs px-2 py-0.5 rounded ${poisoned ? 'bg-red-500/20 text-red-300 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-300'}">
-                  ${poisoned ? '⚠️ Suspicious Directives Flagged' : 'Clean'}
-                </span>
-              </div>
-              <div class="text-xs text-slate-300 bg-slate-950 p-2.5 rounded border border-slate-800">
-                <span class="text-slate-500 block text-[10px] uppercase font-bold mb-1">Declared Description:</span>
-                ${desc}
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
+      // 4. Render Findings Accordion
+      renderFindingsList();
 
-      // Dynamic Traces Tab
-      const tbody = document.getElementById('dynamicTracesTable');
-      document.getElementById('tabCountTraces').innerText = currentTraces.length;
-      if (currentTraces.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-500">No dynamic traces recorded.</td></tr>';
+      // 5. Render Prober Traces
+      renderProberTraces();
+
+      // 6. Update Schema Diff Box
+      renderDiffPre();
+    }
+
+    function updateRadarDrift(report) {
+      const summary = report.summary || {};
+      const crit = summary['CRITICAL'] || 0;
+      const high = summary['HIGH'] || 0;
+      const driftBadge = document.getElementById('radarDriftBadge');
+      const livePoly = document.getElementById('radarLivePoly');
+
+      if (crit === 0 && high === 0 && !report.rug_pull_detected) {
+        driftBadge.innerText = "0% Surface Drift (Baseline Match)";
+        driftBadge.className = "text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold";
+        livePoly.setAttribute('points', "170,158 190.8,158 201.2,188 170,184.4 144,185 149.2,158");
+        livePoly.setAttribute('stroke', "#10b981");
       } else {
-        tbody.innerHTML = currentTraces.map(tr => `
-          <tr class="hover:bg-slate-850">
-            <td class="p-3 text-cyan-300 font-semibold">${tr.tool_name}</td>
-            <td class="p-3 text-slate-400">${tr.probe_type}</td>
-            <td class="p-3 text-slate-400 max-w-xs truncate" title='${JSON.stringify(tr.arguments)}'>${JSON.stringify(tr.arguments)}</td>
-            <td class="p-3 text-slate-300 max-w-sm truncate" title="${tr.response_content.replace(/"/g, '&quot;')}">${tr.response_content.substring(0, 100)}</td>
-            <td class="p-3 text-slate-400">${tr.duration_ms} ms</td>
-            <td class="p-3">
-              ${tr.finding_id ? `<span class="px-1.5 py-0.5 rounded text-[10px] bg-red-600/30 text-red-400 border border-red-500/30">FLAGGED (${tr.finding_id})</span>` :
-                tr.success ? '<span class="text-emerald-400 text-[10px]">OK</span>' : '<span class="text-yellow-400 text-[10px]">ERROR</span>'}
-            </td>
-          </tr>
-        `).join('');
+        driftBadge.innerText = `+${Math.min(180, (crit * 40) + (high * 20))}% Attack Surface Drift`;
+        driftBadge.className = "text-[11px] font-mono text-alert-red bg-red-50 border border-red-200 px-2 py-0.5 rounded-full font-bold";
+        livePoly.setAttribute('points', "170,59.6 258.3,119 253.1,218 170,260 78.5,222.8 71.3,113");
+        livePoly.setAttribute('stroke', "#ef4444");
       }
     }
 
+    function renderPillars() {
+      if (!currentReport) return;
+      const findings = currentReport.findings || [];
+
+      // Pillar 1: Static AST
+      const p1 = findings.filter(f => f.category && f.category.toLowerCase().includes('static'));
+      const p1Container = document.getElementById('pillar1Findings');
+      if (p1.length === 0) {
+        p1Container.innerHTML = `<div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-xs font-mono text-emerald-700">✅ Zero static AST or secret vulnerabilities.</div>`;
+        document.getElementById('pillar1Status').innerText = "VERIFIED CLEAN";
+        document.getElementById('pillar1Status').className = "text-emerald-600 font-bold";
+        document.getElementById('pillar1Dot').className = "w-2 h-2 rounded-full bg-emerald-500";
+      } else {
+        p1Container.innerHTML = p1.slice(0, 2).map(f => `
+          <div class="bg-zinc-50 rounded-2xl p-3 border border-zinc-100">
+            <div class="flex items-center justify-between text-xs font-mono font-bold text-alert-red mb-1">
+              <span class="truncate">${f.title}</span>
+              <span class="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.2 rounded font-bold">${f.severity}</span>
+            </div>
+            <div class="text-[11px] font-mono text-txt-subtle truncate">${f.evidence ? f.evidence.substring(0, 45) : ''}</div>
+          </div>
+        `).join('');
+        document.getElementById('pillar1Status').innerText = `${p1.length} FLAGGED`;
+        document.getElementById('pillar1Status').className = "text-alert-red font-bold";
+        document.getElementById('pillar1Dot').className = "w-2 h-2 rounded-full bg-alert-red";
+      }
+
+      // Pillar 2: Prompt Guard
+      const p2 = findings.filter(f => f.category && (f.category.toLowerCase().includes('description') || f.category.toLowerCase().includes('prompt')));
+      const p2Container = document.getElementById('pillar2Findings');
+      if (p2.length === 0) {
+        p2Container.innerHTML = `<div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-xs font-mono text-emerald-700">✅ Zero tool description poisoning detected.</div>`;
+        document.getElementById('pillar2Status').innerText = "0% Clean";
+        document.getElementById('pillar2Status').className = "text-emerald-600 font-bold";
+        document.getElementById('pillar2Dot').className = "w-2 h-2 rounded-full bg-emerald-500";
+      } else {
+        p2Container.innerHTML = p2.slice(0, 2).map(f => `
+          <div class="bg-zinc-50 rounded-2xl p-3 border border-zinc-100">
+            <div class="flex items-center justify-between text-xs font-mono font-bold text-txt-main mb-1">
+              <span class="truncate">${f.tool_name || f.title}</span>
+              <span class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded font-bold">POISONED</span>
+            </div>
+            <div class="text-[11px] font-mono text-txt-subtle truncate">${f.evidence ? f.evidence.substring(0, 45) : ''}</div>
+          </div>
+        `).join('');
+        document.getElementById('pillar2Status').innerText = `${p2.length} POISONED`;
+        document.getElementById('pillar2Status').className = "text-alert-amber font-bold";
+        document.getElementById('pillar2Dot').className = "w-2 h-2 rounded-full bg-alert-amber";
+      }
+
+      // Pillar 3: Dynamic Prober
+      const p3 = findings.filter(f => f.category && f.category.toLowerCase().includes('dynamic'));
+      const p3Container = document.getElementById('pillar3Findings');
+      const meanDuration = currentTraces.length ? Math.round(currentTraces.reduce((acc, t) => acc + (t.duration_ms || 0), 0) / currentTraces.length) : 0;
+      document.getElementById('pillar3Status').innerText = `${meanDuration} ms`;
+      document.getElementById('kpiLatencyPill').innerText = `${meanDuration} ms`;
+
+      if (p3.length === 0) {
+        p3Container.innerHTML = `<div class="bg-emerald-50 rounded-2xl p-3 border border-emerald-100 text-xs font-mono text-emerald-700">✅ All ${currentTraces.length} dynamic canary fuzz probes passed.</div>`;
+        document.getElementById('pillar3Dot').className = "w-2 h-2 rounded-full bg-emerald-500";
+      } else {
+        p3Container.innerHTML = p3.slice(0, 2).map(f => `
+          <div class="bg-zinc-50 rounded-2xl p-3 border border-zinc-100">
+            <div class="flex items-center justify-between text-xs font-mono font-bold text-alert-red mb-1">
+              <span class="truncate">${f.title}</span>
+              <span class="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.2 rounded font-bold">CANARY</span>
+            </div>
+            <div class="text-[11px] font-mono text-txt-subtle truncate">${f.evidence ? f.evidence.substring(0, 45) : ''}</div>
+          </div>
+        `).join('');
+        document.getElementById('pillar3Dot').className = "w-2 h-2 rounded-full bg-alert-red";
+      }
+
+      // Pillar 4: Rug Pull & Merkle
+      if (currentReport.rug_pull_detected) {
+        document.getElementById('pillar4Status').innerText = "RUG PULL DETECTED";
+        document.getElementById('pillar4Status').className = "text-alert-red font-bold";
+        document.getElementById('pillar4Dot').className = "w-2 h-2 rounded-full bg-alert-red animate-ping";
+        document.getElementById('pillar4LiveStatus').innerText = "MISMATCH";
+        document.getElementById('pillar4LiveStatus').className = "text-alert-red font-bold";
+      } else {
+        document.getElementById('pillar4Status').innerText = "VERIFIED";
+        document.getElementById('pillar4Status').className = "text-emerald-600 font-bold";
+        document.getElementById('pillar4Dot').className = "w-2 h-2 rounded-full bg-emerald-500";
+        document.getElementById('pillar4LiveStatus').innerText = "MATCH";
+        document.getElementById('pillar4LiveStatus').className = "text-emerald-600 font-bold";
+      }
+    }
+
+    function renderFindingsList() {
+      const container = document.getElementById('findingsList');
+      if (!currentReport || !currentReport.findings || currentReport.findings.length === 0) {
+        container.innerHTML = `
+          <div class="p-8 text-center bg-emerald-50/60 border border-emerald-200 rounded-2xl">
+            <span class="material-symbols-outlined text-[32px] text-emerald-600">verified</span>
+            <h4 class="text-sm font-bold text-emerald-800 mt-1">Zero Security Vulnerabilities Identified</h4>
+            <p class="text-xs text-txt-muted mt-0.5">This MCP server passed all static AST checks, Prompt Guard poisoning tests, and dynamic sandbox probes.</p>
+          </div>
+        `;
+        updateFilterCounts([]);
+        return;
+      }
+
+      updateFilterCounts(currentReport.findings);
+
+      const filtered = currentReport.findings.filter(f => {
+        if (activeFindingFilter !== 'ALL' && f.severity !== activeFindingFilter) return false;
+        const q = document.getElementById('findingSearchInput')?.value.toLowerCase();
+        if (q) {
+          const hay = `${f.id} ${f.title} ${f.category} ${f.evidence} ${f.file_path || ''}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center bg-zinc-50 rounded-2xl border border-zinc-200/60 text-txt-muted text-xs font-mono">No findings match active filter.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map((f, i) => {
+        const sevColor = f.severity === 'CRITICAL' ? 'bg-red-100 text-alert-red' :
+                         f.severity === 'HIGH' ? 'bg-amber-100 text-amber-800' :
+                         f.severity === 'MEDIUM' ? 'bg-zinc-200 text-zinc-800' : 'bg-emerald-100 text-emerald-800';
+
+        const fileLoc = f.file_path ? f.file_path.split('\\').pop() : (f.tool_name || 'Manifest');
+        const lineLoc = f.line_number ? `:${f.line_number}` : '';
+
+        return `
+          <div class="border border-border-subtle rounded-2xl overflow-hidden hover:border-zinc-300 transition-all bg-white">
+            <div class="p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 cursor-pointer hover:bg-zinc-50/70 transition-colors" onclick="toggleFinding('f-${i}')">
+              <div class="flex items-start md:items-center gap-3">
+                <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] ${sevColor} font-bold uppercase tracking-wider shrink-0">${f.severity}</span>
+                <span class="font-mono text-xs font-bold text-dark-dock shrink-0">[${f.id}]</span>
+                <span class="text-[13.5px] font-semibold text-txt-main">${f.title}</span>
+              </div>
+              <div class="flex items-center gap-4 text-txt-muted font-mono text-xs shrink-0">
+                <span>${fileLoc}${lineLoc}</span>
+                <span class="material-symbols-outlined text-[20px] transition-transform text-txt-subtle" id="icon-f-${i}">expand_more</span>
+              </div>
+            </div>
+
+            <div class="hidden p-4 bg-zinc-50 border-t border-border-subtle" id="content-f-${i}">
+              <p class="text-[13px] text-zinc-700 mb-3 font-sans">
+                <strong>Category:</strong> ${f.category}
+              </p>
+
+              <div class="bg-white p-3.5 rounded-xl border border-zinc-200 font-mono text-xs mb-3 overflow-x-auto">
+                <div class="text-txt-subtle text-[11px] mb-1.5">Evidence &amp; Code Trigger:</div>
+                <pre class="text-zinc-800 whitespace-pre-wrap">${f.evidence}</pre>
+              </div>
+
+              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-zinc-200">
+                <div class="flex items-center gap-2 text-xs text-zinc-700">
+                  <span class="material-symbols-outlined text-[18px] text-emerald-600">verified_user</span>
+                  <span><strong>Recommended Fix:</strong> ${f.remediation}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateFilterCounts(findings) {
+      document.getElementById('filterCountAll').innerText = findings.length;
+      document.getElementById('filterCountCrit').innerText = findings.filter(f => f.severity === 'CRITICAL').length;
+      document.getElementById('filterCountHigh').innerText = findings.filter(f => f.severity === 'HIGH').length;
+      document.getElementById('filterCountMed').innerText = findings.filter(f => f.severity === 'MEDIUM').length;
+      document.getElementById('filterCountLow').innerText = findings.filter(f => f.severity === 'LOW' || f.severity === 'INFO').length;
+    }
+
+    function setFindingFilter(sev) {
+      activeFindingFilter = sev;
+      ['All', 'Crit', 'High', 'Med', 'Low'].forEach(name => {
+        const btn = document.getElementById('filterBtn' + name);
+        if (btn) {
+          btn.className = "px-3 py-1 rounded-full text-txt-muted hover:text-txt-main transition-colors";
+        }
+      });
+
+      const activeBtnName = sev === 'ALL' ? 'All' : sev === 'CRITICAL' ? 'Crit' : sev === 'HIGH' ? 'High' : sev === 'MEDIUM' ? 'Med' : 'Low';
+      const activeBtn = document.getElementById('filterBtn' + activeBtnName);
+      if (activeBtn) {
+        activeBtn.className = "px-3 py-1 rounded-full bg-white text-txt-main font-semibold shadow-pill";
+      }
+
+      renderFindingsList();
+    }
+
+    function filterFindings() {
+      renderFindingsList();
+    }
+
+    function renderProberTraces() {
+      const rows = document.getElementById('dynamicTracesRows');
+      document.getElementById('traceBufferLabel').innerText = `${currentTraces.length} traces recorded`;
+
+      if (!currentTraces || currentTraces.length === 0) {
+        rows.innerHTML = `<div class="p-6 text-center bg-zinc-50 rounded-2xl border border-zinc-200/60 text-txt-muted">No dynamic traces recorded.</div>`;
+        return;
+      }
+
+      rows.innerHTML = currentTraces.map((tr, i) => {
+        const isTrip = tr.finding_id != null || (!tr.success && tr.response_content && tr.response_content.toLowerCase().includes('canary'));
+        const badgeColor = isTrip ? "bg-red-100 text-alert-red font-bold" : tr.success ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-zinc-200 text-zinc-800";
+        const badgeText = isTrip ? "⚠️ Canary Leaked" : tr.success ? "✓ 200 OK Safe" : "Error";
+
+        return `
+          <div class="bg-zinc-50 p-3 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-2 border border-zinc-100 hover:bg-zinc-100/70 transition-colors">
+            <div class="flex items-center gap-3">
+              <span class="px-2 py-0.5 rounded-full bg-white text-dark-dock font-bold border border-zinc-200 text-[10px]">tools/call</span>
+              <span class="font-semibold text-txt-main">${tr.tool_name}</span>
+              <span class="text-txt-subtle text-[11px]">probe: ${tr.probe_type}</span>
+            </div>
+            <div class="flex items-center gap-4 shrink-0">
+              <span class="text-emerald-600 font-bold">${tr.duration_ms} ms</span>
+              <span class="px-2 py-0.5 rounded-full ${badgeColor} text-[11px] font-semibold">${badgeText}</span>
+              <button class="text-txt-subtle hover:text-txt-main" onclick="togglePayload('trace-payload-${i}')">
+                <span class="material-symbols-outlined text-[18px]">code</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="hidden p-4 bg-white rounded-2xl border border-zinc-200 space-y-1 font-mono text-[11px]" id="trace-payload-${i}">
+            <div class="text-blue-600">&gt; REQUEST: tools/call (${JSON.stringify(tr.arguments)})</div>
+            <div class="${isTrip ? 'text-alert-red font-semibold' : 'text-zinc-700'}">&lt; RESPONSE: ${tr.response_content}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderDiffPre() {
+      if (!currentReport) return;
+      const tools = currentReport.tools || [];
+      const manifest = { tools: tools.map(t => ({ name: t.name, description: t.description, parameters: t.inputSchema })) };
+      const code = JSON.stringify(manifest, null, 2);
+
+      const livePre = document.getElementById('diffLivePre');
+      if (livePre) {
+        livePre.innerText = code;
+      }
+    }
+
+    function toggleFinding(id) {
+      const el = document.getElementById('content-' + id);
+      const icon = document.getElementById('icon-' + id);
+      if (!el) return;
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        if (icon) icon.innerText = 'expand_less';
+      } else {
+        el.classList.add('hidden');
+        if (icon) icon.innerText = 'expand_more';
+      }
+    }
+
+    function togglePayload(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.toggle('hidden');
+    }
+
+    function switchDiffMode(mode) {
+      const btnDiff = document.getElementById('btnViewDiff');
+      const btnBase = document.getElementById('btnViewBaseline');
+      const btnLive = document.getElementById('btnViewLive');
+
+      const colBase = document.getElementById('diffBaselineCol');
+      const colLive = document.getElementById('diffLiveCol');
+
+      [btnDiff, btnBase, btnLive].forEach(b => {
+        if (b) b.className = "px-3.5 py-1.5 rounded-full text-txt-muted hover:text-txt-main transition-all";
+      });
+
+      const activeClasses = "px-3.5 py-1.5 rounded-full bg-dark-dock text-white font-semibold shadow-pill transition-all";
+      if (mode === 'diff') {
+        if (btnDiff) btnDiff.className = activeClasses;
+        colBase.classList.remove('hidden');
+        colLive.classList.remove('hidden');
+      } else if (mode === 'baseline') {
+        if (btnBase) btnBase.className = activeClasses;
+        colBase.classList.remove('hidden');
+        colLive.classList.add('hidden');
+      } else if (mode === 'live') {
+        if (btnLive) btnLive.className = activeClasses;
+        colBase.classList.add('hidden');
+        colLive.classList.remove('hidden');
+      }
+    }
+
+    function copyLedgerHash() {
+      const hashEl = document.getElementById('scopePinHash');
+      const hash = hashEl ? hashEl.innerText : 'sha256:8f4c2eb91048f760da9319eac5c2194cf3e21';
+      navigator.clipboard.writeText(hash).then(() => {
+        const btn = document.getElementById('copyHashBtn');
+        if (btn) {
+          const original = btn.innerHTML;
+          btn.innerHTML = '<span class="material-symbols-outlined text-[14px] text-emerald-600">check</span><span class="text-emerald-600 font-bold">Copied</span>';
+          setTimeout(() => { btn.innerHTML = original; }, 1800);
+        }
+      });
+    }
+
+    // Rug-Pull Studio Actions
     async function pinCurrentServer() {
       const path = document.getElementById('serverPathInput').value;
       const select = document.getElementById('serverSelect');
@@ -688,25 +1620,6 @@
         loadPins();
       } catch (e) {
         alert("Pin error: " + e);
-      }
-    }
-
-    async function loadPins() {
-      try {
-        const res = await fetch('/api/pins');
-        const data = await res.json();
-        const container = document.getElementById('pinsListContainer');
-        if (data.pins.length === 0) {
-          container.innerText = "No servers pinned yet.";
-        } else {
-          container.innerHTML = data.pins.map(p => `
-            <div class="border-b border-slate-800 pb-2 mb-2 last:border-b-0">
-              <span class="text-cyan-400 font-bold">${p.server_id}</span> | Hash: <span class="text-yellow-300">${p.composite_hash}</span> | Pinned: ${p.pinned_at}
-            </div>
-          `).join('');
-        }
-      } catch (e) {
-        console.error(e);
       }
     }
 
@@ -737,32 +1650,28 @@
       if (s) {
         document.getElementById('serverSelect').value = 'rug_pull_server';
         onServerChange();
-        switchTab('findings');
+        scrollToSection('dashboard-top');
         triggerScan();
       }
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(el => {
-        el.classList.remove('border-emerald-500', 'text-emerald-400');
-        el.classList.add('border-transparent', 'text-slate-400');
-      });
-      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-      const activeBtn = document.getElementById(`tabBtn-${tabId}`);
-      activeBtn.classList.remove('border-transparent', 'text-slate-400');
-      activeBtn.classList.add('border-emerald-500', 'text-emerald-400');
-      if (tabId === 'exports') {
-        refreshS3Status();
-        loadScanHistory();
-        loadS3ReportsList();
+    async function loadPins() {
+      try {
+        const res = await fetch('/api/pins');
+        const data = await res.json();
+        if (data.pins && data.pins.length > 0) {
+          const last = data.pins[data.pins.length - 1];
+          document.getElementById('scopePinHash').innerText = last.composite_hash;
+          document.getElementById('footerHash').innerText = last.composite_hash.substring(0, 16) + '...';
+          document.getElementById('pillar4BaselineHash').innerText = last.composite_hash;
+          document.getElementById('diffBaseHashLabel').innerText = last.composite_hash.substring(0, 16) + '...';
+        }
+      } catch (e) {
+        console.error("Failed to load pins", e);
       }
     }
 
-    function openLiveDemoModal() {
-      switchTab('rugpull');
-    }
-
+    // Report Downloads & Previews
     function downloadReport(format) {
       const path = document.getElementById('serverPathInput').value;
       if (!path) return alert("Please select or specify a target server path first.");
@@ -781,63 +1690,37 @@
     }
 
     function copyReportJson() {
-      if (!currentReport) return alert("Please run a security audit first to generate report JSON.");
+      if (!currentReport) return alert("Please run an audit first to generate report telemetry.");
       navigator.clipboard.writeText(JSON.stringify(currentReport, null, 2));
-      showS3Alert("Report JSON copied to clipboard!", "success");
+      showS3Alert("Report telemetry JSON copied to clipboard!", "success");
     }
 
-    async function checkLMStudio() {
-      try {
-        const res = await fetch('/api/lmstudio/status');
-        const data = await res.json();
-        const dot = document.getElementById('lmStudioDot');
-        const text = document.getElementById('lmStudioText');
-        const badge = document.getElementById('lmStudioBadge');
-        if (data.connected) {
-          dot.className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
-          text.innerText = `LM Studio: ${data.active_model || 'Online'}`;
-          badge.className = "text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
-        } else {
-          dot.className = "inline-block w-2 h-2 rounded-full bg-slate-500";
-          text.innerText = "LM Studio: Offline";
-          badge.className = "text-xs bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
-        }
-      } catch (e) {}
-    }
-
+    // AWS S3 Cloud Sync
     async function refreshS3Status() {
       try {
-        const bucket = document.getElementById('s3BucketInput')?.value || "mcp-security-auditor-bucket";
+        const bucket = document.getElementById('s3BucketInput')?.value || "mcp-security-auditor-vault";
         const res = await fetch(`/api/s3/status?bucket=${encodeURIComponent(bucket)}`);
         const data = await res.json();
-        
+
         const s3Dot = document.getElementById('s3Dot');
         const s3Text = document.getElementById('s3Text');
-        const s3Badge = document.getElementById('s3StatusBadge');
-        const s3ModeBadge = document.getElementById('s3ModeBadge');
-        const s3StatusIndicator = document.getElementById('s3StatusIndicator');
-        const s3ModeText = document.getElementById('s3ModeText');
-        const s3RegionText = document.getElementById('s3RegionText');
-        const s3PathText = document.getElementById('s3PathText');
+        const s3VaultModeBadge = document.getElementById('s3VaultModeBadge');
 
         if (data.is_live_aws) {
-          if (s3Dot) s3Dot.className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
+          if (s3Dot) s3Dot.className = "w-2 h-2 rounded-full bg-emerald-500";
           if (s3Text) s3Text.innerText = `S3: AWS (${data.bucket_name})`;
-          if (s3Badge) s3Badge.className = "text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
-          if (s3ModeBadge) s3ModeBadge.className = "text-xs px-3 py-1 rounded-full font-mono font-medium border bg-emerald-500/20 text-emerald-300 border-emerald-500/30 flex items-center gap-2";
-          if (s3StatusIndicator) s3StatusIndicator.className = "w-2 h-2 rounded-full bg-emerald-400";
-          if (s3ModeText) s3ModeText.innerText = "AWS S3 Cloud Live";
+          if (s3VaultModeBadge) {
+            s3VaultModeBadge.className = "px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold";
+            s3VaultModeBadge.innerText = `AWS Cloud (${data.region})`;
+          }
         } else {
-          if (s3Dot) s3Dot.className = "inline-block w-2 h-2 rounded-full bg-amber-400";
+          if (s3Dot) s3Dot.className = "w-2 h-2 rounded-full bg-amber-400";
           if (s3Text) s3Text.innerText = `S3: Emulated (${data.bucket_name})`;
-          if (s3Badge) s3Badge.className = "text-xs bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
-          if (s3ModeBadge) s3ModeBadge.className = "text-xs px-3 py-1 rounded-full font-mono font-medium border bg-amber-500/20 text-amber-300 border-amber-500/30 flex items-center gap-2";
-          if (s3StatusIndicator) s3StatusIndicator.className = "w-2 h-2 rounded-full bg-amber-400";
-          if (s3ModeText) s3ModeText.innerText = "Local S3 Simulation Mode";
+          if (s3VaultModeBadge) {
+            s3VaultModeBadge.className = "px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 font-semibold";
+            s3VaultModeBadge.innerText = "Local S3 Simulation";
+          }
         }
-
-        if (s3RegionText) s3RegionText.innerText = data.region || 'us-east-1';
-        if (s3PathText) s3PathText.innerText = data.storage_path || `s3://${data.bucket_name}`;
       } catch (e) {
         console.error("S3 status error:", e);
       }
@@ -846,7 +1729,7 @@
     async function syncSQLiteToS3() {
       const bucket = document.getElementById('s3BucketInput')?.value;
       try {
-        showS3Alert("Syncing SQLite database (mcpaudit_pins.db) to S3 bucket...", "info");
+        showS3Alert("Syncing SQLite database (mcpaudit_pins.db) to S3...", "info");
         const url = bucket ? `/api/s3/sync-db?bucket=${encodeURIComponent(bucket)}` : '/api/s3/sync-db';
         const res = await fetch(url, { method: 'POST' });
         const data = await res.json();
@@ -865,7 +1748,7 @@
       if (!confirm("Restore local SQLite database from S3? This will refresh local pins with the S3 backup.")) return;
       const bucket = document.getElementById('s3BucketInput')?.value;
       try {
-        showS3Alert("Restoring SQLite database from S3 bucket...", "info");
+        showS3Alert("Restoring SQLite database from S3...", "info");
         const url = bucket ? `/api/s3/pull-db?bucket=${encodeURIComponent(bucket)}` : '/api/s3/pull-db';
         const res = await fetch(url, { method: 'POST' });
         const data = await res.json();
@@ -916,13 +1799,13 @@
     function showS3Alert(msg, type) {
       const alertBox = document.getElementById('s3ActionAlert');
       if (!alertBox) return;
-      alertBox.classList.remove('hidden', 'bg-emerald-950/70', 'border-emerald-500/50', 'text-emerald-300', 'bg-red-950/70', 'border-red-500/50', 'text-red-300', 'bg-slate-900', 'border-slate-700', 'text-slate-300');
+      alertBox.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-800', 'bg-red-50', 'border-red-200', 'text-alert-red', 'bg-zinc-50', 'border-zinc-200', 'text-zinc-700');
       if (type === 'success') {
-        alertBox.classList.add('bg-emerald-950/70', 'border-emerald-500/50', 'text-emerald-300');
+        alertBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
       } else if (type === 'error') {
-        alertBox.classList.add('bg-red-950/70', 'border-red-500/50', 'text-red-300');
+        alertBox.classList.add('bg-red-50', 'border-red-200', 'text-alert-red');
       } else {
-        alertBox.classList.add('bg-slate-900', 'border-slate-700', 'text-slate-300');
+        alertBox.classList.add('bg-zinc-50', 'border-zinc-200', 'text-zinc-700');
       }
       alertBox.innerText = msg;
     }
@@ -933,20 +1816,18 @@
         const res = await fetch('/api/history');
         const data = await res.json();
         if (!data.history || data.history.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" class="p-3 text-center text-slate-500">No scan history recorded in SQLite yet.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="4" class="py-3 text-center text-txt-subtle">No historical scans recorded yet.</td></tr>';
           return;
         }
         tbody.innerHTML = data.history.map(h => {
-          const gradeColor = h.grade === 'A+' || h.grade === 'A' ? 'text-emerald-400' : h.grade === 'B' ? 'text-cyan-400' : 'text-red-400';
-          const rugBadge = h.rug_pull_detected ? '<span class="text-red-400 font-bold">🚨 YES</span>' : '<span class="text-emerald-400">✅ Clean</span>';
+          const scoreColor = h.security_score >= 80 ? 'text-emerald-600 font-bold' : 'text-alert-red font-bold';
           const dateStr = h.scanned_at ? h.scanned_at.split('T')[0] : '';
           return `
-            <tr class="hover:bg-slate-800/60">
-              <td class="p-2 font-bold text-white truncate max-w-[120px]" title="${h.server_id}">${h.server_id}</td>
-              <td class="p-2 ${gradeColor} font-bold">${h.security_score} (${h.grade})</td>
-              <td class="p-2"><span class="text-red-400">${h.critical_count}C</span> <span class="text-orange-400">${h.high_count}H</span></td>
-              <td class="p-2">${rugBadge}</td>
-              <td class="p-2 text-slate-400">${dateStr}</td>
+            <tr class="hover:bg-zinc-50">
+              <td class="py-1.5 font-bold text-txt-main truncate max-w-[120px]">${h.server_id}</td>
+              <td class="py-1.5 ${scoreColor}">${h.security_score} (${h.grade})</td>
+              <td class="py-1.5"><span class="text-alert-red">${h.critical_count}C</span> <span class="text-alert-amber">${h.high_count}H</span></td>
+              <td class="py-1.5 text-txt-subtle">${dateStr}</td>
             </tr>
           `;
         }).join('');
@@ -963,14 +1844,14 @@
         const res = await fetch(url);
         const data = await res.json();
         if (!data.reports || data.reports.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-center text-slate-500">No archived reports in S3 bucket yet.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="3" class="py-3 text-center text-txt-subtle">No archived files in S3 vault yet.</td></tr>';
           return;
         }
         tbody.innerHTML = data.reports.map(r => `
-          <tr class="hover:bg-slate-800/60">
-            <td class="p-2 text-slate-200 truncate max-w-[180px]" title="${r.key}">${r.key}</td>
-            <td class="p-2 text-slate-400">${r.size ? Math.round(r.size / 1024) + ' KB' : '-'}</td>
-            <td class="p-2 text-amber-400 text-[10px]">${r.s3_uri ? 'S3' : 'Local'}</td>
+          <tr class="hover:bg-zinc-50">
+            <td class="py-1.5 text-txt-main truncate max-w-[180px]" title="${r.key}">${r.key}</td>
+            <td class="py-1.5 text-txt-muted">${r.size ? Math.round(r.size / 1024) + ' KB' : '-'}</td>
+            <td class="py-1.5 text-emerald-600 font-semibold">${r.s3_uri ? 'S3' : 'Local'}</td>
           </tr>
         `).join('');
       } catch (e) {
@@ -978,7 +1859,23 @@
       }
     }
 
-    // Initialize
+    async function checkLMStudio() {
+      try {
+        const res = await fetch('/api/lmstudio/status');
+        const data = await res.json();
+        const dot = document.getElementById('lmStudioDot');
+        const text = document.getElementById('lmStudioText');
+        if (data.connected) {
+          dot.className = "w-2 h-2 rounded-full bg-emerald-500";
+          text.innerText = `LM Studio: ${data.active_model || 'Online'}`;
+        } else {
+          dot.className = "w-2 h-2 rounded-full bg-zinc-400";
+          text.innerText = "LM Studio: Offline";
+        }
+      } catch (e) {}
+    }
+
+    // Initialization
     loadServers();
     loadPins();
     checkLMStudio();

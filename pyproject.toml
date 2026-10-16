@@ -10,7 +10,9 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-    { name = "MCP Security Auditor Team" }
+    { name = "Saad Momin", email = "Saadmomin940@gmail.com" },
+    { name = "Sawez Farjad", email = "sawezfarjad@gmail.com" },
+    { name = "Security Team", email = "security@brextherfx.site" },
 ]
 keywords = [
     "mcp",

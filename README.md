@@ -265,3 +265,11 @@ We welcome contributions from the security and AI engineering community! Whether
 - Read our **[Code of Conduct](CODE_OF_CONDUCT.md)** to foster an inclusive, respectful environment.
 - For vulnerability reports regarding this auditor itself, please review our **[Security Policy](SECURITY.md)**.
 
+---
+
+## 👥 Maintainers & Contact
+
+- **Saad Momin**: [Saadmomin940@gmail.com](mailto:Saadmomin940@gmail.com)
+- **Sawez Farjad**: [sawezfarjad@gmail.com](mailto:sawezfarjad@gmail.com)
+- **Security & Incident Response**: [security@brextherfx.site](mailto:security@brextherfx.site)
+

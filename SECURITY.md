@@ -18,7 +18,11 @@ The **MCP Server Security Auditor** team takes the security of our software and 
 If you discover a potential security vulnerability within this project, please follow responsible disclosure guidelines:
 
 1. **Do NOT open a public GitHub issue** to report security vulnerabilities.
-2. Email your findings directly to our security maintainers at **`security@mcpaudit.org`** (or create a private GitHub Advisory if available on the repository).
+2. Email your findings directly to our security maintainers at:
+   - **`security@brextherfx.site`**
+   - **`Saadmomin940@gmail.com`**
+   - **`sawezfarjad@gmail.com`**
+   (or submit via private GitHub Security Advisory if available).
 3. Include the following details in your report:
    - Type of vulnerability (e.g., AST bypass, Remote Code Execution, DoS)
    - Step-by-step reproduction instructions or proof-of-concept (PoC) code

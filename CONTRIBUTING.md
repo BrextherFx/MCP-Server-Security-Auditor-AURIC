@@ -97,3 +97,12 @@ python run_demo.py
 ## ⚖️ Contributor License Agreement
 
 By contributing to this repository, you confirm that your contributions are your original work and you license them under the [MIT License](LICENSE).
+
+---
+
+## 📬 Questions & Community Contacts
+
+Have questions or need guidance before opening a PR? Feel free to reach out to the project maintainers:
+- **Saad Momin**: [Saadmomin940@gmail.com](mailto:Saadmomin940@gmail.com)
+- **Sawez Farjad**: [sawezfarjad@gmail.com](mailto:sawezfarjad@gmail.com)
+- **Security & Infrastructure**: [security@brextherfx.site](mailto:security@brextherfx.site)

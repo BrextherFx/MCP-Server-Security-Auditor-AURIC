@@ -9,5 +9,6 @@ load_dotenv(override=True)
 
 __version__ = "1.0.0"
 __license__ = "MIT"
-__author__ = "MCP Security Auditor Team"
+__author__ = "Saad Momin, Sawez Farjad, Security Team"
+__email__ = "security@brextherfx.site"
 

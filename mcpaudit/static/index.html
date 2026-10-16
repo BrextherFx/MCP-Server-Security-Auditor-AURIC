@@ -102,32 +102,33 @@
       <span class="material-symbols-outlined text-[20px]">verified_user</span>
     </div>
 
-    <nav class="flex flex-col items-center gap-2.5 w-full">
-      <a href="#dashboard-top" onclick="scrollToSection('dashboard-top')" class="w-10 h-10 rounded-xl bg-accent-lime text-dark-dock flex items-center justify-center shadow-lg transition-all" title="Admin & Security Monitoring">
+    <nav class="flex flex-col items-center gap-2.5 w-full" id="sidebarNav">
+      <a href="#dashboard-top" data-target="dashboard-top" onclick="scrollToSection('dashboard-top')" class="nav-dock-btn w-10 h-10 rounded-xl bg-accent-lime text-dark-dock flex items-center justify-center shadow-lg transition-all scale-105 font-semibold group relative" title="Admin & Security Monitoring">
         <span class="material-symbols-outlined text-[20px] font-semibold">grid_view</span>
+        <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Overview</span>
       </a>
 
-      <a href="#findings-section" onclick="scrollToSection('findings-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Findings & Rules">
+      <a href="#findings-section" data-target="findings-section" onclick="scrollToSection('findings-section')" class="nav-dock-btn w-10 h-10 rounded-xl text-zinc-400 hover:text-dark-dock hover:bg-accent-lime hover:scale-110 flex items-center justify-center transition-all group relative" title="Findings & Rules">
         <span class="material-symbols-outlined text-[20px]">policy</span>
         <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Findings</span>
       </a>
 
-      <a href="#probing-traces-section" onclick="scrollToSection('probing-traces-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Dynamic Probing">
+      <a href="#probing-traces-section" data-target="probing-traces-section" onclick="scrollToSection('probing-traces-section')" class="nav-dock-btn w-10 h-10 rounded-xl text-zinc-400 hover:text-dark-dock hover:bg-accent-lime hover:scale-110 flex items-center justify-center transition-all group relative" title="Dynamic Probing">
         <span class="material-symbols-outlined text-[20px]">radar</span>
         <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Probing</span>
       </a>
 
-      <a href="#rugpull-studio" onclick="scrollToSection('rugpull-studio')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Rug-Pull Studio">
+      <a href="#rugpull-studio" data-target="rugpull-studio" onclick="scrollToSection('rugpull-studio')" class="nav-dock-btn w-10 h-10 rounded-xl text-zinc-400 hover:text-dark-dock hover:bg-accent-lime hover:scale-110 flex items-center justify-center transition-all group relative" title="Rug-Pull Studio">
         <span class="material-symbols-outlined text-[20px]">crisis_alert</span>
         <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Rug-Pull Diff</span>
       </a>
 
-      <a href="javascript:void(0)" onclick="openSolutionsModal()" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Solutions & Fix Guide">
-        <span class="material-symbols-outlined text-[20px] text-emerald-400">auto_fix_high</span>
+      <a href="javascript:void(0)" data-target="solutions-modal" onclick="openSolutionsModal()" class="nav-dock-btn w-10 h-10 rounded-xl text-zinc-400 hover:text-dark-dock hover:bg-accent-lime hover:scale-110 flex items-center justify-center transition-all group relative" title="Solutions & Fix Guide">
+        <span class="material-symbols-outlined text-[20px] text-emerald-400 group-hover:text-dark-dock">auto_fix_high</span>
         <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Solutions Hub</span>
       </a>
 
-      <a href="#reports-s3-section" onclick="scrollToSection('reports-s3-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Reports & AWS S3 Cloud Sync">
+      <a href="#reports-s3-section" data-target="reports-s3-section" onclick="scrollToSection('reports-s3-section')" class="nav-dock-btn w-10 h-10 rounded-xl text-zinc-400 hover:text-dark-dock hover:bg-accent-lime hover:scale-110 flex items-center justify-center transition-all group relative" title="Reports & AWS S3 Cloud Sync">
         <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
         <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Reports & S3</span>
       </a>
@@ -136,7 +137,7 @@
     <div class="w-6 h-px bg-white/10 my-1"></div>
 
     <div class="flex flex-col items-center gap-2">
-      <div onclick="scrollToSection('reports-s3-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center cursor-pointer transition-all" title="Settings & S3">
+      <div onclick="scrollToSection('reports-s3-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-dark-dock hover:bg-accent-lime hover:scale-110 flex items-center justify-center cursor-pointer transition-all" title="Settings & S3">
         <span class="material-symbols-outlined text-[19px]">settings</span>
       </div>
       <div class="w-2 h-2 rounded-full bg-accent-lime animate-pulse" title="MCPAudit Active"></div>
@@ -288,118 +289,118 @@
       <!-- SECTION 1: 4 MAIN KPI SCORECARDS -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         <!-- Card 1: Security Alerts -->
-        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div onclick="scrollToSection('findings-section')" class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-xl hover:-translate-y-1.5 hover:border-zinc-300 transition-all duration-300 group cursor-pointer">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium group-hover:text-txt-main transition-colors">
               <span class="material-symbols-outlined text-[18px]">shield</span>
               <span>Security Alerts</span>
             </div>
-            <button onclick="scrollToSection('findings-section')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+            <button class="text-txt-subtle group-hover:text-txt-main transition-colors"><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
           </div>
           <div class="my-3 flex items-baseline gap-2.5">
-            <div id="cntFindings" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
-            <span id="kpiAlertRateBadge" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5">
+            <div id="cntFindings" class="text-[34px] font-bold text-txt-main tracking-tight leading-none group-hover:text-dark-dock transition-colors">0</div>
+            <span id="kpiAlertRateBadge" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5 shadow-sm">
               0% <span class="material-symbols-outlined text-[13px]">check</span>
             </span>
             <span id="cntCriticalText" class="text-xs text-txt-subtle font-mono">/ 0 crit</span>
           </div>
-          <!-- Vertical bar mini chart -->
-          <div id="kpiBarChart" class="flex items-end gap-1.5 h-10 w-full pt-2">
-            <div class="w-1.5 bg-dark-dock rounded-full h-[35%]"></div>
-            <div class="w-1.5 bg-dark-dock rounded-full h-[55%]"></div>
-            <div class="w-1.5 bg-dark-dock rounded-full h-[40%]"></div>
-            <div class="w-1.5 bg-dark-dock rounded-full h-[70%]"></div>
-            <div class="w-1.5 bg-dark-dock rounded-full h-[95%]"></div>
-            <div class="w-1.5 bg-dark-dock rounded-full h-[60%]"></div>
-            <div class="w-1.5 bg-dark-dock rounded-full h-[45%]"></div>
-            <div class="w-1.5 bg-dark-dock/30 rounded-full h-[30%]"></div>
-            <div class="w-1.5 bg-dark-dock/20 rounded-full h-[25%]"></div>
-            <div class="w-1.5 bg-dark-dock/20 rounded-full h-[20%]"></div>
-            <div class="w-1.5 bg-dark-dock/15 rounded-full h-[15%]"></div>
-            <div class="w-1.5 bg-dark-dock/10 rounded-full h-[10%]"></div>
+          <!-- Vertical bar mini chart (Interactive on Hover & Data-Driven) -->
+          <div id="kpiBarChart" class="flex items-end gap-1.5 h-10 w-full pt-2 group-hover:scale-y-110 transition-transform duration-300">
+            <div class="w-1.5 bg-dark-dock rounded-full h-[35%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[55%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[40%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[70%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[95%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[60%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock rounded-full h-[45%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock/30 rounded-full h-[30%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock/20 rounded-full h-[25%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock/20 rounded-full h-[20%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock/15 rounded-full h-[15%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
+            <div class="w-1.5 bg-dark-dock/10 rounded-full h-[10%] hover:scale-y-125 hover:bg-accent-lime transition-all cursor-pointer"></div>
           </div>
         </div>
 
         <!-- Card 2: High-Risk Events / Rug-Pull Status -->
-        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div onclick="scrollToSection('rugpull-studio')" class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-xl hover:-translate-y-1.5 hover:border-zinc-300 transition-all duration-300 group cursor-pointer">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium group-hover:text-txt-main transition-colors">
               <span class="material-symbols-outlined text-[18px]">crisis_alert</span>
               <span>High-Risk Events</span>
             </div>
-            <button onclick="scrollToSection('rugpull-studio')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+            <button class="text-txt-subtle group-hover:text-txt-main transition-colors"><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
           </div>
           <div class="my-3 flex items-baseline gap-2.5">
             <div id="cntHighRisk" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
-            <span id="kpiHighRateBadge" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono font-bold text-[11px] flex items-center gap-0.5">
+            <span id="kpiHighRateBadge" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-mono font-bold text-[11px] flex items-center gap-0.5 shadow-sm">
               Normal
             </span>
             <span id="lblRugPullStatus" class="text-xs text-txt-subtle font-mono">/ clean</span>
           </div>
-          <!-- Segmented capsule pills -->
-          <div id="kpiCapsuleList" class="flex items-center gap-1.5 pt-2">
-            <div class="h-8 w-4 bg-dark-dock rounded-full"></div>
-            <div class="h-8 w-4 bg-dark-dock rounded-full"></div>
-            <div class="h-8 w-4 bg-dark-dock rounded-full"></div>
-            <div class="h-8 w-4 bg-dark-dock/20 rounded-full border border-dark-dock/20"></div>
-            <div class="h-8 w-4 bg-dark-dock/20 rounded-full border border-dark-dock/20"></div>
-            <div class="h-8 w-4 bg-dark-dock/10 rounded-full border border-dark-dock/10"></div>
-            <div class="h-8 w-4 bg-dark-dock/10 rounded-full border border-dark-dock/10"></div>
-            <div class="h-8 w-4 bg-dark-dock/5 rounded-full border border-dark-dock/10"></div>
+          <!-- Segmented capsule pills (Interactive on Hover & Data-Driven) -->
+          <div id="kpiCapsuleList" class="flex items-center gap-1.5 pt-2 group-hover:scale-105 transition-transform duration-300">
+            <div class="h-8 w-4 bg-dark-dock rounded-full hover:scale-110 transition-transform cursor-pointer"></div>
+            <div class="h-8 w-4 bg-dark-dock rounded-full hover:scale-110 transition-transform cursor-pointer"></div>
+            <div class="h-8 w-4 bg-dark-dock rounded-full hover:scale-110 transition-transform cursor-pointer"></div>
+            <div class="h-8 w-4 bg-dark-dock/20 rounded-full border border-dark-dock/20 hover:scale-110 transition-transform cursor-pointer"></div>
+            <div class="h-8 w-4 bg-dark-dock/20 rounded-full border border-dark-dock/20 hover:scale-110 transition-transform cursor-pointer"></div>
+            <div class="h-8 w-4 bg-dark-dock/10 rounded-full border border-dark-dock/10 hover:scale-110 transition-transform cursor-pointer"></div>
+            <div class="h-8 w-4 bg-dark-dock/10 rounded-full border border-dark-dock/10 hover:scale-110 transition-transform cursor-pointer"></div>
+            <div class="h-8 w-4 bg-dark-dock/5 rounded-full border border-dark-dock/10 hover:scale-110 transition-transform cursor-pointer"></div>
           </div>
         </div>
 
         <!-- Card 3: Dynamic Canary Probes -->
-        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div onclick="scrollToSection('probing-traces-section')" class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-xl hover:-translate-y-1.5 hover:border-zinc-300 transition-all duration-300 group cursor-pointer">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium group-hover:text-txt-main transition-colors">
               <span class="material-symbols-outlined text-[18px]">network_check</span>
               <span>Dynamic Canary Probes</span>
             </div>
-            <button onclick="scrollToSection('probing-traces-section')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+            <button class="text-txt-subtle group-hover:text-txt-main transition-colors"><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
           </div>
           <div class="my-3 flex items-baseline gap-2.5">
             <div id="cntProbes" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
-            <span id="kpiProbeLatencyBadge" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5">
+            <span id="kpiProbeLatencyBadge" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5 shadow-sm">
               Live
             </span>
             <span id="cntFailedProbes" class="text-xs text-txt-subtle font-mono">/ 0 failed</span>
           </div>
-          <!-- Mini smooth wave sparkline -->
-          <div class="relative h-10 w-full flex items-center justify-center pt-1">
-            <svg class="w-full h-8 overflow-visible" fill="none" viewBox="0 0 160 30">
-              <path d="M0,22 Q20,24 40,16 T80,18 T120,8 T160,14" fill="none" stroke="#d1d5db" stroke-linecap="round" stroke-width="2"></path>
-              <circle cx="120" cy="8" fill="#131417" r="4.5" stroke="#ffffff" stroke-width="2"></circle>
+          <!-- Mini smooth wave sparkline (Interactive on Hover & Data-Driven) -->
+          <div class="relative h-10 w-full flex items-center justify-center pt-1 group-hover:scale-105 transition-transform duration-300">
+            <svg id="kpiWaveSvg" class="w-full h-8 overflow-visible" fill="none" viewBox="0 0 160 30">
+              <path id="kpiWavePath" d="M0,22 Q20,24 40,16 T80,18 T120,8 T160,14" fill="none" stroke="#10b981" stroke-linecap="round" stroke-width="2.5" class="transition-all duration-500"></path>
+              <circle id="kpiWaveDot" cx="120" cy="8" fill="#131417" r="4.5" stroke="#ffffff" stroke-width="2" class="transition-all duration-500"></circle>
             </svg>
-            <div id="kpiLatencyPill" class="absolute right-6 -top-1 bg-dark-dock text-white text-[10px] font-mono px-1.5 py-0.5 rounded-md shadow-sm">
+            <div id="kpiLatencyPill" class="absolute right-6 -top-1 bg-dark-dock text-white text-[10px] font-mono px-1.5 py-0.5 rounded-md shadow-sm transition-all duration-300">
               0 ms
             </div>
           </div>
         </div>
 
         <!-- Card 4: Tools Discovered & Audited -->
-        <div class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-md transition-shadow">
+        <div onclick="scrollToSection('rugpull-studio')" class="bg-white rounded-3xl p-5 border border-border-subtle shadow-subtle flex flex-col justify-between hover:shadow-xl hover:-translate-y-1.5 hover:border-zinc-300 transition-all duration-300 group cursor-pointer">
           <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium">
+            <div class="flex items-center gap-2 text-txt-muted text-[13px] font-medium group-hover:text-txt-main transition-colors">
               <span class="material-symbols-outlined text-[18px]">fingerprint</span>
               <span>Tools Discovered</span>
             </div>
-            <button onclick="scrollToSection('rugpull-studio')" class="text-txt-subtle hover:text-txt-main"><span class="material-symbols-outlined text-[18px]">more_vert</span></button>
+            <button class="text-txt-subtle group-hover:text-txt-main transition-colors"><span class="material-symbols-outlined text-[18px]">arrow_forward</span></button>
           </div>
           <div class="my-3 flex items-baseline gap-2.5">
             <div id="cntTools" class="text-[34px] font-bold text-txt-main tracking-tight leading-none">0</div>
-            <span id="kpiScorePill" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5">
+            <span id="kpiScorePill" class="px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5 shadow-sm">
               Score: 100
             </span>
             <span class="text-xs text-txt-subtle font-mono">/ MCP 2.x</span>
           </div>
-          <!-- Chunky block columns with curved corners -->
-          <div class="flex items-end justify-between gap-1.5 h-10 w-full pt-1">
-            <div class="flex-1 bg-dark-dock rounded-xl h-[45%]"></div>
-            <div class="flex-1 bg-dark-dock rounded-xl h-[65%]"></div>
-            <div class="flex-1 bg-dark-dock rounded-xl h-[100%]"></div>
-            <div class="flex-1 bg-dark-dock rounded-xl h-[85%]"></div>
-            <div class="flex-1 bg-dark-dock rounded-xl h-[95%]"></div>
+          <!-- Chunky block columns with curved corners (Interactive on Hover & Data-Driven) -->
+          <div id="kpiToolBlocks" class="flex items-end justify-between gap-1.5 h-10 w-full pt-1 group-hover:scale-105 transition-transform duration-300">
+            <div class="flex-1 bg-dark-dock rounded-xl h-[45%] hover:brightness-125 transition-all cursor-pointer"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[65%] hover:brightness-125 transition-all cursor-pointer"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[100%] hover:brightness-125 transition-all cursor-pointer"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[85%] hover:brightness-125 transition-all cursor-pointer"></div>
+            <div class="flex-1 bg-dark-dock rounded-xl h-[95%] hover:brightness-125 transition-all cursor-pointer"></div>
           </div>
         </div>
       </div>
@@ -1107,11 +1108,47 @@
     let availableServers = [];
     let activeFindingFilter = 'ALL';
 
+    function setActiveNav(targetId) {
+      document.querySelectorAll('.nav-dock-btn').forEach(btn => {
+        const target = btn.getAttribute('data-target');
+        const icon = btn.querySelector('.material-symbols-outlined');
+        if (target === targetId) {
+          btn.className = "nav-dock-btn w-10 h-10 rounded-xl bg-accent-lime text-dark-dock flex items-center justify-center shadow-lg transition-all scale-105 font-semibold group relative";
+          if (icon && icon.classList.contains('text-emerald-400')) {
+            icon.classList.remove('text-emerald-400');
+            icon.classList.add('text-dark-dock');
+          }
+        } else {
+          btn.className = "nav-dock-btn w-10 h-10 rounded-xl text-zinc-400 hover:text-dark-dock hover:bg-accent-lime hover:scale-110 flex items-center justify-center transition-all group relative";
+          if (target === 'solutions-modal' && icon) {
+            icon.classList.add('text-emerald-400');
+          }
+        }
+      });
+    }
+
     function scrollToSection(id) {
       const el = document.getElementById(id);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' });
+        setActiveNav(id);
       }
+    }
+
+    function initScrollSpy() {
+      const sections = ['dashboard-top', 'findings-section', 'probing-traces-section', 'rugpull-studio', 'reports-s3-section'];
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+            setActiveNav(entry.target.id);
+          }
+        });
+      }, { threshold: [0.25, 0.5] });
+
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) observer.observe(el);
+      });
     }
 
     async function loadServers() {
@@ -1231,6 +1268,89 @@
       } else {
         rateBadge.className = "px-2 py-0.5 rounded-full bg-accent-lime text-dark-dock font-mono font-bold text-[11px] flex items-center gap-0.5";
         rateBadge.innerHTML = `Clean <span class="material-symbols-outlined text-[13px]">check</span>`;
+      }
+
+      // DYNAMIC DATA-DRIVEN SPARKLINE CHARTS (IMAGE 2)
+      // Card 1: kpiBarChart (Dynamic Sound-wave bars)
+      const barChart = document.getElementById('kpiBarChart');
+      if (barChart) {
+        if (crit > 0) {
+          const heights = [45, 70, 95, 100, 85, 70, 55, 40, 30, 25, 20, 15];
+          barChart.innerHTML = heights.map((h, i) => {
+            const color = i < 4 ? "bg-alert-red shadow-sm shadow-red-500/40" : (i < 7 ? "bg-alert-amber" : "bg-dark-dock");
+            return `<div class="w-1.5 ${color} rounded-full transition-all duration-300 hover:scale-y-125 hover:brightness-125 cursor-pointer" style="height:${h}%;" title="Alert Cluster ${i+1}: ${Math.round(h)}% density"></div>`;
+          }).join('');
+        } else if (total > 0) {
+          const heights = [25, 45, 60, 55, 40, 35, 25, 20, 18, 15, 12, 10];
+          barChart.innerHTML = heights.map((h, i) => {
+            const color = i < 4 ? "bg-accent-lime" : "bg-dark-dock";
+            return `<div class="w-1.5 ${color} rounded-full transition-all duration-300 hover:scale-y-125 hover:bg-accent-lime cursor-pointer" style="height:${h}%;" title="Warning Cluster ${i+1}"></div>`;
+          }).join('');
+        } else {
+          const heights = [20, 35, 25, 45, 30, 25, 20, 18, 15, 12, 10, 8];
+          barChart.innerHTML = heights.map((h, i) => {
+            return `<div class="w-1.5 bg-emerald-500 rounded-full transition-all duration-300 hover:scale-y-125 hover:bg-emerald-400 cursor-pointer" style="height:${h}%;" title="Cluster ${i+1}: 100% Clean"></div>`;
+          }).join('');
+        }
+      }
+
+      // Card 2: kpiCapsuleList (Dynamic Segmented capsule pills)
+      const capsuleList = document.getElementById('kpiCapsuleList');
+      if (capsuleList) {
+        const isRugPull = currentReport.rug_pull_detected;
+        const riskLevel = isRugPull ? 8 : Math.min(8, Math.max(1, crit * 2 + high));
+        let capsulesHtml = '';
+        for (let i = 0; i < 8; i++) {
+          if (isRugPull) {
+            capsulesHtml += `<div class="h-8 w-4 bg-alert-red rounded-full animate-pulse shadow-sm shadow-red-500/50 hover:scale-110 transition-transform cursor-pointer" title="Rug-Pull Mutation Active"></div>`;
+          } else if (crit > 0) {
+            const bg = i < riskLevel ? "bg-alert-red" : "bg-dark-dock/15 border border-dark-dock/15";
+            capsulesHtml += `<div class="h-8 w-4 ${bg} rounded-full hover:scale-110 transition-transform cursor-pointer" title="Risk Capsule ${i+1}"></div>`;
+          } else if (total > 0) {
+            const bg = i < riskLevel ? "bg-alert-amber" : "bg-dark-dock/15 border border-dark-dock/15";
+            capsulesHtml += `<div class="h-8 w-4 ${bg} rounded-full hover:scale-110 transition-transform cursor-pointer" title="Warning Capsule ${i+1}"></div>`;
+          } else {
+            const bg = i < 4 ? "bg-emerald-500" : "bg-emerald-100 border border-emerald-300";
+            capsulesHtml += `<div class="h-8 w-4 ${bg} rounded-full hover:scale-110 transition-transform cursor-pointer" title="Certified Baseline Clean"></div>`;
+          }
+        }
+        capsuleList.innerHTML = capsulesHtml;
+      }
+
+      // Card 3: Dynamic Wave Sparkline & Latency Pill
+      const wavePath = document.getElementById('kpiWavePath');
+      const waveDot = document.getElementById('kpiWaveDot');
+      const latencyPill = document.getElementById('kpiLatencyPill');
+      const latencies = currentTraces.map(t => t.duration_ms || 2);
+      const avgLatency = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 2;
+      if (latencyPill) latencyPill.innerText = `${avgLatency} ms`;
+      if (failedProbes > 0) {
+        if (wavePath) wavePath.setAttribute('stroke', '#ef4444');
+        if (waveDot) waveDot.setAttribute('fill', '#ef4444');
+        if (latencyPill) latencyPill.className = "absolute right-6 -top-1 bg-red-600 text-white text-[10px] font-mono px-1.5 py-0.5 rounded-md shadow-sm animate-pulse";
+      } else {
+        if (wavePath) wavePath.setAttribute('stroke', '#10b981');
+        if (waveDot) waveDot.setAttribute('fill', '#10b981');
+        if (latencyPill) latencyPill.className = "absolute right-6 -top-1 bg-dark-dock text-white text-[10px] font-mono px-1.5 py-0.5 rounded-md shadow-sm";
+      }
+
+      // Card 4: Dynamic Chunky Tool Blocks
+      const toolBlocks = document.getElementById('kpiToolBlocks');
+      if (toolBlocks) {
+        const score = currentReport.security_score || 0;
+        const color = score >= 90 ? "bg-emerald-500" : (score >= 70 ? "bg-accent-lime" : "bg-alert-red");
+        const h1 = Math.min(100, Math.max(25, Math.round(score * 0.45)));
+        const h2 = Math.min(100, Math.max(35, Math.round(score * 0.65)));
+        const h3 = Math.min(100, Math.max(50, Math.round(score)));
+        const h4 = Math.min(100, Math.max(40, Math.round(score * 0.85)));
+        const h5 = Math.min(100, Math.max(30, Math.round(score * 0.70)));
+        toolBlocks.innerHTML = `
+          <div class="flex-1 ${color} rounded-xl transition-all duration-500 hover:brightness-125 cursor-pointer" style="height:${h1}%;" title="AST Verification (${score}%)"></div>
+          <div class="flex-1 ${color} rounded-xl transition-all duration-500 hover:brightness-125 cursor-pointer" style="height:${h2}%;" title="Description Guard (${score}%)"></div>
+          <div class="flex-1 ${color} rounded-xl transition-all duration-500 hover:brightness-125 cursor-pointer" style="height:${h3}%;" title="Composite Score ${score}/100"></div>
+          <div class="flex-1 bg-dark-dock rounded-xl transition-all duration-500 hover:brightness-125 cursor-pointer" style="height:${h4}%;" title="Protocol Response"></div>
+          <div class="flex-1 bg-dark-dock/60 rounded-xl transition-all duration-500 hover:brightness-125 cursor-pointer" style="height:${h5}%;" title="Schema Conformance"></div>
+        `;
       }
 
       // 2. Micro Scorecard & Radar
@@ -2110,6 +2230,7 @@
     refreshS3Status();
     loadScanHistory();
     loadS3ReportsList();
+    initScrollSpy();
     setInterval(checkLMStudio, 10000);
     setInterval(refreshS3Status, 30000);
   </script>

@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.git/
+.gitignore
+.pytest_cache/
+*.log
+.system_generated/
+s3_bucket_storage/
+dist/
+build/
+*.egg-info/

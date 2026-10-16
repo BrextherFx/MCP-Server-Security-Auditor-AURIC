@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # MCP Security Auditor - Web Dashboard & REST API
+  mcpaudit-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcpaudit-app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount SQLite database to persist tool fingerprints & scan history
+      - ./mcpaudit_pins.db:/app/mcpaudit_pins.db
+      # Mount test servers directory for dynamic live updates
+      - ./test_servers:/app/test_servers
+      # Mount local S3 bucket simulation directory
+      - ./s3_bucket_storage:/app/s3_bucket_storage
+      # Mount reports output directory
+      - ./reports:/app/reports
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8000
+      - LM_STUDIO_URL=http://host.docker.internal:1234/v1
+    extra_hosts:
+      # Allows container to reach LM Studio running on host OS
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/servers"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # MCP Security Auditor - CLI Runner Service
+  mcpaudit-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcpaudit-cli-runner
+    profiles: ["cli"]
+    volumes:
+      - ./mcpaudit_pins.db:/app/mcpaudit_pins.db
+      - ./test_servers:/app/test_servers
+      - ./s3_bucket_storage:/app/s3_bucket_storage
+      - ./reports:/app/reports
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LM_STUDIO_URL=http://host.docker.internal:1234/v1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    entrypoint: ["mcpaudit"]

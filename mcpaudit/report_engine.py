@@ -109,6 +109,50 @@ class ReportEngine:
         self.console.print(table)
         self.console.print()
 
+        # Dedicated Actionable Solutions and Code Patches Panel
+        if show_solutions and sorted_findings:
+            self.console.print(
+                Panel(
+                    "[bold green]💡 ACTIONABLE REMEDIATION & SECURITY CODE PATCHES[/bold green]\n"
+                    "[dim]Step-by-step developer implementation guide and safe code replacement patterns:[/dim]",
+                    border_style="green",
+                    padding=(0, 2),
+                )
+            )
+            for f in sorted_findings:
+                sev_style = severity_colors.get(f.severity, "white")
+                loc = f.file_path or f.tool_name or "Global"
+                if f.line_number:
+                    loc += f":{f.line_number}"
+
+                steps_str = ""
+                if f.solution_steps:
+                    steps_str = "\n".join(f"  [cyan]{i+1}.[/cyan] {s}" for i, s in enumerate(f.solution_steps))
+
+                content_parts = [
+                    f"[bold]Category:[/bold] {f.category}  |  [bold]Target:[/bold] [cyan]{loc}[/cyan]",
+                    f"[bold green]Remediation Strategy:[/bold green] {f.solution_summary or f.remediation}",
+                ]
+                if steps_str:
+                    content_parts.append(f"[bold yellow]Actionable Resolution Steps:[/bold yellow]\n{steps_str}")
+
+                if f.code_fix_before and f.code_fix_after:
+                    content_parts.append(
+                        f"[bold red]❌ Vulnerable Implementation Pattern:[/bold red]\n{f.code_fix_before}\n\n"
+                        f"[bold green]✅ Recommended Safe Code Fix:[/bold green]\n{f.code_fix_after}"
+                    )
+
+                border_color = "red" if f.severity == Severity.CRITICAL else ("orange3" if f.severity == Severity.HIGH else ("yellow" if f.severity == Severity.MEDIUM else "blue"))
+                self.console.print(
+                    Panel(
+                        "\n\n".join(content_parts),
+                        title=f"[{sev_style}][{f.severity.value}][/{sev_style}] [bold cyan]{f.id}[/bold cyan] — [white]{f.title}[/white]",
+                        border_style=border_color,
+                        padding=(1, 2),
+                    )
+                )
+            self.console.print()
+
     def generate_markdown(self, report: ScanReport) -> str:
         report.calculate_score()
 
@@ -150,7 +194,7 @@ class ReportEngine:
                 md.append(f"- **Modified Tools:** {', '.join(f'`{t}`' for t in report.rug_pull_details.modified_tools.keys())}")
             md.append("")
 
-        md.append("## Detailed Findings")
+        md.append("## Detailed Findings & Actionable Solutions")
         md.append("")
         if not report.findings:
             md.append("✅ **No vulnerabilities or security warnings found. The MCP server passed all audit checks.**")
@@ -168,7 +212,18 @@ class ReportEngine:
                 md.append("```")
                 md.append(f.evidence)
                 md.append("```")
-                md.append(f"- **Remediation / Fix:** {f.remediation}")
+                md.append(f"- **Remediation Strategy:** {f.solution_summary or f.remediation}")
+                if f.solution_steps:
+                    md.append("- **Actionable Fix Steps:**")
+                    for s_idx, step in enumerate(f.solution_steps, 1):
+                        md.append(f"  {s_idx}. {step}")
+                if f.code_fix_before and f.code_fix_after:
+                    md.append("- **Code Solution (Before vs After):**")
+                    md.append("```python")
+                    md.append(f.code_fix_before)
+                    md.append("")
+                    md.append(f.code_fix_after)
+                    md.append("```")
                 md.append("")
 
         md.append("---")
@@ -244,6 +299,19 @@ class ReportEngine:
                 if f.line_number:
                     loc += f" (Line {f.line_number})"
 
+                steps_html = ""
+                if f.solution_steps:
+                    steps_html = "<ol style='margin:4px 0 8px 18px;padding:0;color:#cbd5e1;font-size:12px;'>" + "".join(f"<li>{s}</li>" for s in f.solution_steps) + "</ol>"
+
+                code_box = ""
+                if f.code_fix_before and f.code_fix_after:
+                    code_box = f"""
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+                        <div style="background:#450a0a;border:1px solid #7f1d1d;border-radius:4px;padding:8px;font-family:monospace;font-size:11px;color:#fca5a5;white-space:pre-wrap;"><strong>❌ Vulnerable:</strong><br>{f.code_fix_before}</div>
+                        <div style="background:#064e3b;border:1px solid #047857;border-radius:4px;padding:8px;font-family:monospace;font-size:11px;color:#a7f3d0;white-space:pre-wrap;"><strong>✅ Secure Fix:</strong><br>{f.code_fix_after}</div>
+                    </div>
+                    """
+
                 findings_html += f"""
                 <div style="background:#1e293b;border:1px solid #334155;border-left:4px solid {sev_color};padding:16px;margin-bottom:14px;border-radius:6px;">
                     <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
@@ -255,7 +323,12 @@ class ReportEngine:
                         <span style="color:#94a3b8;font-size:11px;font-family:monospace;">{loc}</span>
                     </div>
                     <div style="background:#0f172a;border:1px solid #1e293b;padding:10px;border-radius:4px;font-family:monospace;font-size:12px;color:#cbd5e1;white-space:pre-wrap;margin-bottom:8px;">{f.evidence}</div>
-                    <div style="color:#4ade80;font-size:12px;"><strong>Remediation:</strong> {f.remediation}</div>
+                    <div style="background:#0f172a;border:1px solid #10b981;border-radius:6px;padding:10px;margin-top:8px;">
+                        <div style="color:#34d399;font-size:12px;font-weight:bold;margin-bottom:4px;">💡 Actionable Solution &amp; Remediation:</div>
+                        <div style="color:#e2e8f0;font-size:12px;margin-bottom:6px;">{f.solution_summary or f.remediation}</div>
+                        {steps_html}
+                        {code_box}
+                    </div>
                 </div>
                 """
 
@@ -347,3 +420,105 @@ class ReportEngine:
             Path(json_path).write_text(report.model_dump_json(indent=2), encoding="utf-8")
         if html_path:
             Path(html_path).write_text(self.generate_html(report), encoding="utf-8")
+
+    def generate_solutions_guide_markdown(self, report: ScanReport) -> str:
+        """Generates a developer-first Markdown remediation handbook with copyable code patches."""
+        report.calculate_score()
+        md = []
+        md.append(f"# 💡 MCP Server Security Remediation & Code Patch Guide")
+        md.append(f"**Target:** `{report.target}` | **Audit Date:** `{report.scanned_at}` | **Score:** `{report.security_score}/100` (Grade: **{report.grade}**)\n")
+        md.append("> This manual contains concrete, step-by-step developer remediation instructions and copyable code solutions to resolve all detected vulnerabilities in this MCP server.\n")
+
+        if not report.findings:
+            md.append("✅ **Clean Server:** Zero vulnerabilities detected. No fixes required.")
+            return "\n".join(md)
+
+        for i, f in enumerate(report.findings, 1):
+            md.append(f"## {i}. [{f.severity.value}] {f.title} (`{f.id}`)")
+            md.append(f"- **Category:** {f.category}")
+            loc = f.file_path or f.tool_name or "Global"
+            if f.line_number:
+                loc += f" (Line {f.line_number})"
+            md.append(f"- **Location / Target:** `{loc}`")
+            md.append(f"- **Remediation Strategy:** {f.solution_summary or f.remediation}")
+            
+            if f.solution_steps:
+                md.append("\n### 🛠️ Implementation Steps:")
+                for si, step in enumerate(f.solution_steps, 1):
+                    md.append(f"{si}. {step}")
+            
+            if f.code_fix_before and f.code_fix_after:
+                md.append("\n### 💻 Concrete Code Solution (Before vs After):")
+                md.append("```python")
+                md.append(f.code_fix_before)
+                md.append("")
+                md.append(f.code_fix_after)
+                md.append("```")
+            md.append("\n---\n")
+
+        md.append("*Generated by MCP Server Security Auditor (PS02) Remediation Engine*")
+        return "\n".join(md)
+
+    def print_solutions_guide(self, report: ScanReport, category_filter: Optional[str] = None):
+        """Prints a rich, formatted remediation guide directly in the CLI terminal."""
+        report.calculate_score()
+        findings = report.findings
+        if category_filter:
+            c_low = category_filter.lower()
+            findings = [f for f in findings if c_low in f.category.lower() or c_low in f.id.lower() or c_low in f.title.lower()]
+
+        self.console.print(
+            Panel(
+                f"[bold green]💡 MCP SECURITY REMEDIATION GUIDE & CODE SOLUTIONS[/bold green]\n"
+                f"[dim]Target: {report.target} | Findings with Actionable Patches: {len(findings)}[/dim]",
+                border_style="green",
+                padding=(0, 2),
+            )
+        )
+
+        if not findings:
+            self.console.print("[bold green]✅ No matching security issues found for remediation.[/bold green]\n")
+            return
+
+        severity_colors = {
+            Severity.CRITICAL: "bold red",
+            Severity.HIGH: "orange3",
+            Severity.MEDIUM: "yellow",
+            Severity.LOW: "blue",
+            Severity.INFO: "dim white",
+        }
+
+        for idx, f in enumerate(findings, 1):
+            sev_style = severity_colors.get(f.severity, "white")
+            loc = f.file_path or f.tool_name or "Global"
+            if f.line_number:
+                loc += f":{f.line_number}"
+
+            steps_str = ""
+            if f.solution_steps:
+                steps_str = "\n".join(f"  [cyan]{i+1}.[/cyan] {s}" for i, s in enumerate(f.solution_steps))
+
+            content_parts = [
+                f"[bold]Category:[/bold] {f.category}  |  [bold]Location:[/bold] [cyan]{loc}[/cyan]",
+                f"[bold green]Strategy:[/bold green] {f.solution_summary or f.remediation}",
+            ]
+            if steps_str:
+                content_parts.append(f"[bold yellow]Step-by-Step Resolution:[/bold yellow]\n{steps_str}")
+
+            if f.code_fix_before and f.code_fix_after:
+                content_parts.append(
+                    f"[bold red]❌ Vulnerable Code Pattern:[/bold red]\n{f.code_fix_before}\n\n"
+                    f"[bold green]✅ Secure Replacement Fix:[/bold green]\n{f.code_fix_after}"
+                )
+
+            border_color = "red" if f.severity == Severity.CRITICAL else ("orange3" if f.severity == Severity.HIGH else ("yellow" if f.severity == Severity.MEDIUM else "blue"))
+            self.console.print(
+                Panel(
+                    "\n\n".join(content_parts),
+                    title=f"[{sev_style}][{f.severity.value}][/{sev_style}] [bold cyan]{f.id}[/bold cyan] ({idx}/{len(findings)}) — [white]{f.title}[/white]",
+                    border_style=border_color,
+                    padding=(1, 2),
+                )
+            )
+        self.console.print()
+

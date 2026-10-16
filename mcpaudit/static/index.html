@@ -102,6 +102,11 @@
         <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Rug-Pull Diff</span>
       </a>
 
+      <a href="javascript:void(0)" onclick="openSolutionsModal()" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Solutions & Fix Guide">
+        <span class="material-symbols-outlined text-[20px] text-emerald-400">auto_fix_high</span>
+        <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Solutions Hub</span>
+      </a>
+
       <a href="#reports-s3-section" onclick="scrollToSection('reports-s3-section')" class="w-10 h-10 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 flex items-center justify-center transition-all group relative" title="Reports & AWS S3 Cloud Sync">
         <span class="material-symbols-outlined text-[20px]">cloud_upload</span>
         <span class="absolute left-16 bg-dark-dock text-white text-[11px] font-medium px-2.5 py-1 rounded-md shadow-lg pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">Reports & S3</span>
@@ -169,6 +174,13 @@
               <span>Download Report</span>
             </button>
           </div>
+
+          <!-- Solutions Hub Action Pill -->
+          <button onclick="openSolutionsModal()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-txt-main text-[13px] font-medium border border-border-soft hover:bg-zinc-50 shadow-pill transition-all" type="button" title="Open Security Remediation & Code Solutions Hub">
+            <span class="material-symbols-outlined text-[17px] text-emerald-600">auto_fix_high</span>
+            <span>Solutions Hub</span>
+            <span id="navSolutionsCount" class="px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">0</span>
+          </button>
 
           <!-- Server Selector Dropdown Pill -->
           <div class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-border-soft shadow-pill">
@@ -796,6 +808,12 @@
               <button onclick="setFindingFilter('MEDIUM')" id="filterBtnMed" class="px-3 py-1 text-txt-muted hover:text-txt-main transition-colors">Med (<span id="filterCountMed">0</span>)</button>
               <button onclick="setFindingFilter('LOW')" id="filterBtnLow" class="px-3 py-1 text-emerald-600 hover:text-emerald-700 transition-colors">Low (<span id="filterCountLow">0</span>)</button>
             </div>
+            <button onclick="openSolutionsModal()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 flex items-center gap-1.5 shadow-pill transition-all" title="View all developer remediation solutions & code patches">
+              <span class="material-symbols-outlined text-[15px] text-emerald-600">auto_fix_high</span> Solutions Hub (<span id="solutionsCountLabel">0</span>)
+            </button>
+            <button onclick="downloadSolutionsGuide()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white text-txt-main hover:bg-zinc-50 border border-border-soft flex items-center gap-1.5 shadow-pill transition-all" title="Download step-by-step developer remediation manual">
+              <span class="material-symbols-outlined text-[15px] text-zinc-600">download</span> Export Fix Sheet
+            </button>
           </div>
         </div>
 
@@ -1452,11 +1470,56 @@
                 <pre class="text-zinc-800 whitespace-pre-wrap">${f.evidence}</pre>
               </div>
 
-              <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-zinc-200">
-                <div class="flex items-center gap-2 text-xs text-zinc-700">
-                  <span class="material-symbols-outlined text-[18px] text-emerald-600">verified_user</span>
-                  <span><strong>Recommended Fix:</strong> ${f.remediation}</span>
+              <!-- ACTIONABLE SOLUTION & CODE FIX BOX -->
+              <div class="mt-3.5 bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/40 rounded-2xl border border-emerald-200/80 p-4 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2 border-b border-emerald-100">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+                      <span class="material-symbols-outlined text-[15px]">auto_fix_high</span>
+                    </span>
+                    <span class="text-xs font-bold text-emerald-950 uppercase tracking-wider font-mono">Actionable Solution &amp; Fix Guide</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button class="px-2.5 py-1 bg-white hover:bg-emerald-50 text-emerald-800 text-[11px] font-mono font-semibold rounded-lg border border-emerald-200 shadow-sm flex items-center gap-1 transition-all" onclick="copyCodeSnippet('fix-code-${i}', this)">
+                      <span class="material-symbols-outlined text-[14px]">content_copy</span> Copy Solution
+                    </button>
+                  </div>
                 </div>
+
+                <div class="text-[13px] text-zinc-800 font-medium mb-3 flex items-start gap-2">
+                  <span class="text-emerald-700 font-bold shrink-0">Strategy:</span>
+                  <span>${f.solution_summary || f.remediation}</span>
+                </div>
+
+                ${(f.solution_steps && f.solution_steps.length > 0) ? `
+                  <div class="mb-3 space-y-1.5 bg-white/80 rounded-xl p-3 border border-emerald-100/70">
+                    <div class="text-[11px] font-bold text-emerald-900 uppercase tracking-wider font-mono mb-1">Implementation Steps:</div>
+                    ${f.solution_steps.map((st, si) => `
+                      <div class="flex items-start gap-2 text-xs text-zinc-700">
+                        <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono flex items-center justify-center shrink-0 mt-0.5">${si + 1}</span>
+                        <span>${st}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
+
+                ${(f.code_fix_before && f.code_fix_after) ? `
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 font-mono text-xs">
+                    <div class="bg-red-50/70 rounded-xl p-3 border border-red-200/80">
+                      <div class="text-[11px] font-bold text-red-800 mb-1.5 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">cancel</span> ❌ Vulnerable Pattern
+                      </div>
+                      <pre class="text-zinc-800 text-[11px] whitespace-pre-wrap overflow-x-auto max-h-48 leading-relaxed">${escapeHtml(f.code_fix_before)}</pre>
+                    </div>
+                    <div class="bg-emerald-50/70 rounded-xl p-3 border border-emerald-200/80">
+                      <div class="text-[11px] font-bold text-emerald-800 mb-1.5 flex items-center justify-between">
+                        <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> ✅ Secure Replacement</span>
+                        <span class="text-[10px] font-normal text-emerald-700">Ready to patch</span>
+                      </div>
+                      <pre class="text-emerald-950 text-[11px] whitespace-pre-wrap overflow-x-auto max-h-48 leading-relaxed font-semibold" id="fix-code-${i}">${escapeHtml(f.code_fix_after)}</pre>
+                    </div>
+                  </div>
+                ` : ''}
               </div>
             </div>
           </div>
@@ -1470,6 +1533,12 @@
       document.getElementById('filterCountHigh').innerText = findings.filter(f => f.severity === 'HIGH').length;
       document.getElementById('filterCountMed').innerText = findings.filter(f => f.severity === 'MEDIUM').length;
       document.getElementById('filterCountLow').innerText = findings.filter(f => f.severity === 'LOW' || f.severity === 'INFO').length;
+
+      const solCount = findings.filter(f => (f.solution_steps && f.solution_steps.length > 0) || f.code_fix_after || f.solution_summary).length;
+      const solLbl = document.getElementById('solutionsCountLabel');
+      if (solLbl) solLbl.innerText = solCount;
+      const navSol = document.getElementById('navSolutionsCount');
+      if (navSol) navSol.innerText = solCount;
     }
 
     function setFindingFilter(sev) {
@@ -1875,6 +1944,142 @@
       } catch (e) {}
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function copyCodeSnippet(elementId, btn) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      const text = el.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<span class="material-symbols-outlined text-[13px] text-emerald-600">check</span> Copied!';
+          btn.classList.add('bg-emerald-100', 'text-emerald-900');
+          setTimeout(() => {
+            btn.innerHTML = orig;
+            btn.classList.remove('bg-emerald-100', 'text-emerald-900');
+          }, 2000);
+        }
+      });
+    }
+
+    function openSolutionsModal() {
+      const modal = document.getElementById('solutionsModal');
+      const content = document.getElementById('solutionsModalContent');
+      if (!modal || !content) return;
+
+      if (!currentReport || !currentReport.findings || currentReport.findings.length === 0) {
+        content.innerHTML = `
+          <div class="p-10 text-center bg-zinc-50 rounded-2xl border border-zinc-200">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto mb-3">
+              <span class="material-symbols-outlined text-[28px]">verified_user</span>
+            </div>
+            <h4 class="text-base font-bold text-txt-main">No Vulnerabilities Identified</h4>
+            <p class="text-xs text-txt-muted mt-1 max-w-md mx-auto">Select a test server and click "Run Full Audit" to generate actionable security remediation plans and code patches.</p>
+          </div>
+        `;
+      } else {
+        content.innerHTML = currentReport.findings.map((f, i) => {
+          const sevColor = f.severity === 'CRITICAL' ? 'bg-red-100 text-alert-red' :
+                           f.severity === 'HIGH' ? 'bg-amber-100 text-amber-800' :
+                           f.severity === 'MEDIUM' ? 'bg-zinc-200 text-zinc-800' : 'bg-emerald-100 text-emerald-800';
+          const fileLoc = f.file_path ? f.file_path.split('\\').pop() : (f.tool_name || 'Global');
+          const lineLoc = f.line_number ? `:${f.line_number}` : '';
+
+          return `
+            <div class="bg-white rounded-2xl border border-zinc-200/90 p-5 shadow-sm space-y-3">
+              <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-zinc-100">
+                <div class="flex items-center gap-2.5">
+                  <span class="px-2.5 py-0.5 rounded-full font-mono text-[10px] ${sevColor} font-bold uppercase tracking-wider">${f.severity}</span>
+                  <span class="font-mono text-xs font-bold text-txt-main">[${f.id}]</span>
+                  <span class="text-[14px] font-bold text-txt-main">${f.title}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-mono text-txt-muted bg-zinc-100 px-2 py-0.5 rounded-md">${fileLoc}${lineLoc}</span>
+                  <button class="px-3 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-mono font-semibold rounded-lg border border-emerald-300 flex items-center gap-1.5 transition-all" onclick="copyCodeSnippet('modal-fix-code-${i}', this)">
+                    <span class="material-symbols-outlined text-[14px]">content_copy</span> Copy Fix
+                  </button>
+                </div>
+              </div>
+
+              <div class="text-[13px] text-zinc-800 font-medium">
+                <strong class="text-emerald-700">Remediation Strategy:</strong> ${f.solution_summary || f.remediation}
+              </div>
+
+              ${(f.solution_steps && f.solution_steps.length > 0) ? `
+                <div class="bg-zinc-50 rounded-xl p-3 border border-zinc-200/60 space-y-1.5">
+                  <div class="text-[11px] font-bold text-zinc-800 uppercase tracking-wider font-mono">Step-by-Step Implementation:</div>
+                  ${f.solution_steps.map((st, si) => `
+                    <div class="flex items-start gap-2 text-xs text-zinc-700">
+                      <span class="w-4 h-4 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono flex items-center justify-center shrink-0 mt-0.5">${si + 1}</span>
+                      <span>${st}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              ${(f.code_fix_before && f.code_fix_after) ? `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono text-xs pt-1">
+                  <div class="bg-red-50/70 rounded-xl p-3 border border-red-200">
+                    <div class="text-[11px] font-bold text-red-800 mb-1 flex items-center gap-1">
+                      <span class="material-symbols-outlined text-[14px]">cancel</span> ❌ Vulnerable Pattern
+                    </div>
+                    <pre class="text-zinc-800 text-[11px] whitespace-pre-wrap overflow-x-auto max-h-48 leading-relaxed">${escapeHtml(f.code_fix_before)}</pre>
+                  </div>
+                  <div class="bg-emerald-50/70 rounded-xl p-3 border border-emerald-200">
+                    <div class="text-[11px] font-bold text-emerald-800 mb-1 flex items-center justify-between">
+                      <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">check_circle</span> ✅ Secure Replacement</span>
+                      <span class="text-[10px] text-emerald-700">Patch ready</span>
+                    </div>
+                    <pre class="text-emerald-950 text-[11px] whitespace-pre-wrap overflow-x-auto max-h-48 leading-relaxed font-semibold" id="modal-fix-code-${i}">${escapeHtml(f.code_fix_after)}</pre>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('');
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function closeSolutionsModal() {
+      const modal = document.getElementById('solutionsModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    async function downloadSolutionsGuide() {
+      const path = document.getElementById('serverPathInput')?.value;
+      if (!path) {
+        alert("Please select or scan an MCP server first.");
+        return;
+      }
+      try {
+        const res = await fetch(`/api/reports/download/solutions?server_path=${encodeURIComponent(path)}`);
+        if (!res.ok) throw new Error("Failed to generate solutions guide");
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const sName = document.getElementById('serverSelect')?.value || 'server';
+        a.download = `remediation_guide_${sName}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      } catch (e) {
+        alert("Download failed: " + e);
+      }
+    }
+
     // Initialization
     loadServers();
     loadPins();
@@ -1885,5 +2090,34 @@
     setInterval(checkLMStudio, 10000);
     setInterval(refreshS3Status, 30000);
   </script>
+
+  <!-- SOLUTIONS HUB MODAL -->
+  <div id="solutionsModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] shadow-2xl flex flex-col overflow-hidden border border-zinc-200">
+      <div class="p-5 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/70">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md">
+            <span class="material-symbols-outlined text-[22px]">auto_fix_high</span>
+          </div>
+          <div>
+            <h3 class="text-[18px] font-bold text-txt-main">Security Solutions &amp; Code Patches Hub</h3>
+            <p class="text-xs text-txt-muted">Interactive developer remediation guide with copyable safe code replacements.</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="downloadSolutionsGuide()" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white hover:bg-zinc-100 border border-zinc-300 text-txt-main flex items-center gap-1.5 shadow-sm transition-all">
+            <span class="material-symbols-outlined text-[15px]">download</span> Export .md Guide
+          </button>
+          <button onclick="closeSolutionsModal()" class="w-9 h-9 rounded-full bg-zinc-100 hover:bg-zinc-200 text-txt-muted hover:text-txt-main flex items-center justify-center transition-all">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4 max-h-[calc(90vh-120px)] bg-zinc-50/40" id="solutionsModalContent">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
 </body>
 </html>

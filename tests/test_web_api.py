@@ -80,3 +80,24 @@ def test_api_s3_archive_report():
     assert data.get("success") is True
     assert "s3://" in data.get("html_uri", "")
 
+
+def test_api_solutions_endpoints():
+    vuln_path = str(Path("test_servers/vulnerable_file_server.py").resolve())
+    # Test solutions JSON endpoint
+    res = client.get(f"/api/solutions?server_path={vuln_path}")
+    assert res.status_code == 200
+    data = res.json()
+    assert "solutions" in data
+    assert len(data["solutions"]) > 0
+    sol = data["solutions"][0]
+    assert "strategy" in sol
+    assert "steps" in sol
+
+    # Test solutions guide markdown download
+    res_dl = client.get(f"/api/reports/download/solutions?server_path={vuln_path}")
+    assert res_dl.status_code == 200
+    assert "attachment" in res_dl.headers.get("content-disposition", "")
+    assert "remediation_guide" in res_dl.headers.get("content-disposition", "")
+    assert "# 💡 MCP Server Security Remediation & Code Patch Guide" in res_dl.text
+
+

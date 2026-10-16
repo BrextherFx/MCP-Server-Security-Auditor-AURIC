@@ -350,6 +350,47 @@ async def download_html_report(server_path: str):
     )
 
 
+@app.get("/api/reports/download/solutions")
+async def download_solutions_guide(server_path: str):
+    path = Path(server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
+    report = ScanReport(**res["report"])
+    engine = ReportEngine()
+    guide = engine.generate_solutions_guide_markdown(report)
+    filename = f"remediation_guide_{path.stem}.md"
+    return Response(
+        content=guide,
+        media_type="text/markdown",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+@app.get("/api/solutions")
+async def get_solutions_data(server_path: str):
+    path = Path(server_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Server not found.")
+    res = await run_scan(ScanRequest(server_path=server_path, use_lm_studio=False))
+    report = ScanReport(**res["report"])
+    solutions = []
+    for f in report.findings:
+        solutions.append({
+            "id": f.id,
+            "title": f.title,
+            "category": f.category,
+            "severity": f.severity.value,
+            "location": f.file_path or f.tool_name or "Global",
+            "line_number": f.line_number,
+            "strategy": f.solution_summary or f.remediation,
+            "steps": f.solution_steps,
+            "code_before": f.code_fix_before,
+            "code_after": f.code_fix_after,
+        })
+    return {"server": str(path), "total_findings": len(solutions), "solutions": solutions}
+
+
 @app.get("/api/reports/sarif")
 async def get_sarif_export(server_path: str):
     path = Path(server_path)

@@ -110,21 +110,21 @@ docker run --rm mcp-security-auditor python run_demo.py
 ### 1. Installation
 Activate the Python virtual environment and install the package in editable mode:
 ```bash
-.\.venv\Scripts\pip install -e .
+.venv\Scripts\pip install -e .
 ```
 
 ### 2. Run Automated Live Demonstration
 To execute the complete 4-stage automated demonstration (Clean Server, Poisoned Server, Vulnerable Server, and Live Rug-Pull Catch):
 ```bash
-.\.venv\Scripts\python run_demo.py
+.venv\Scripts\python run_demo.py
 # Or via CLI:
-.\.venv\Scripts\mcpaudit demo
+.venv\Scripts\mcpaudit demo
 ```
 
 ### 3. Launch Interactive Web Dashboard
 Start the FastAPI web server:
 ```bash
-.\.venv\Scripts\mcpaudit serve --port 8000
+.venv\Scripts\mcpaudit serve --port 8000
 ```
 Open **`http://127.0.0.1:8000`** in your browser.
 
@@ -233,6 +233,6 @@ Download audit findings directly from the CLI, Web UI, or REST API:
 
 Run the full automated test suite covering static AST, Prompt Guard 2, dynamic MCP stdio probing, SQLite pin-and-diff, AWS S3 storage, solutions engine, and REST APIs:
 ```bash
-.\.venv\Scripts\pytest -v
+.venv\Scripts\pytest -v
 ```
 *(All 27 test cases pass with 100% success rate)*

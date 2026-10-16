@@ -214,10 +214,13 @@
             <span class="font-medium text-[11.5px]">LM Studio AI Review</span>
           </label>
 
-          <!-- Run Full Audit Button -->
-          <button id="scanBtn" onclick="triggerScan()" class="flex items-center gap-1.5 px-4 py-2 rounded-full bg-dark-dock text-white text-[13px] font-semibold hover:bg-zinc-800 shadow-sm transition-all" type="button">
-            <span id="scanSpinner" class="hidden animate-spin text-[16px]">🔄</span>
-            <span id="scanPlayIcon" class="material-symbols-outlined text-[16px] text-accent-lime">play_arrow</span>
+          <!-- Run Full Audit Button (Monochrome Design) -->
+          <button id="scanBtn" onclick="triggerScan()" class="flex items-center gap-2 px-4 py-2 rounded-full bg-dark-dock text-white text-[13px] font-semibold hover:bg-zinc-800 shadow-sm transition-all border border-white/10 active:scale-[0.98]" type="button">
+            <svg id="scanSpinner" class="hidden animate-spin h-3.5 w-3.5 text-white shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="scanPlayIcon" class="material-symbols-outlined text-[15px] text-white shrink-0">play_arrow</span>
             <span>Run Full Audit</span>
           </button>
 
@@ -728,19 +731,19 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5 p-3 bg-zinc-50 rounded-2xl border border-zinc-200/60 font-mono text-xs">
           <button onclick="setRugPullVersion('1', true)" class="p-3 bg-white hover:bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-200 font-semibold transition flex flex-col gap-1 text-left shadow-sm">
             <span class="text-[10px] font-bold text-emerald-600 uppercase">STEP 1</span>
-            <span>📌 Pin Baseline v1 (Safe Notes App)</span>
+            <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px]">push_pin</span> Pin Baseline v1 (Safe Notes App)</span>
             <span class="text-[10px] text-txt-muted font-normal font-sans">Pins clean SHA-256 fingerprint in SQLite</span>
           </button>
 
           <button onclick="setRugPullVersion('2', false)" class="p-3 bg-white hover:bg-red-50 text-alert-red rounded-xl border border-red-200 font-semibold transition flex flex-col gap-1 text-left shadow-sm">
             <span class="text-[10px] font-bold text-alert-red uppercase">STEP 2</span>
-            <span>⚡ Simulate Live Rug-Pull (v2)</span>
+            <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px]">bolt</span> Simulate Live Rug-Pull (v2)</span>
             <span class="text-[10px] text-txt-muted font-normal font-sans">Adds stealth tool &amp; poisons prompt</span>
           </button>
 
           <button onclick="selectAndScanRugPull()" class="p-3 bg-dark-dock hover:bg-zinc-800 text-white rounded-xl font-semibold transition flex flex-col gap-1 text-left shadow-sm">
-            <span class="text-[10px] font-bold text-accent-lime uppercase">STEP 3</span>
-            <span>🔍 Audit Rug-Pull Server</span>
+            <span class="text-[10px] font-bold text-zinc-300 uppercase">STEP 3</span>
+            <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[15px] text-white">search</span> Audit Rug-Pull Server</span>
             <span class="text-[10px] text-zinc-400 font-normal font-sans">DeepDiff flags the unapproved mutations</span>
           </button>
         </div>

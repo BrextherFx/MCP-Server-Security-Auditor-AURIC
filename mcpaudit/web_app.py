@@ -89,46 +89,22 @@ async def run_scan(req: ScanRequest):
         raise HTTPException(status_code=404, detail=f"Server path '{req.server_path}' does not exist.")
 
     eff_id = req.server_id or path.stem
-    report = ScanReport(target=str(path))
 
-    # Check if LM Studio is reachable if requested
-    lm_active = False
-    if req.use_lm_studio:
-        lm_client = LMStudioClient(base_url=req.lm_studio_url)
-        conn = lm_client.check_connection()
-        lm_active = conn.get("connected", False)
+    from mcpaudit.pipeline import SecurityAuditPipeline, PipelineConfig
 
-    # 1. Static Scan
-    scanner = StaticScanner(use_lm_studio=lm_active, lm_studio_url=req.lm_studio_url)
-    report.findings.extend(scanner.scan_path(str(path)))
-
-    # 2. Dynamic Prober
-    prober = DynamicProber(timeout_seconds=8.0)
-    discovered_tools, dyn_findings, traces = await prober.probe_server(
-        command=sys.executable,
-        args=[str(path)],
+    config = PipelineConfig(
+        target_path=str(path),
+        server_id=eff_id,
+        pin_baseline=req.pin_baseline,
+        probe_timeout_seconds=8.0,
+        use_lm_studio=req.use_lm_studio,
+        lm_studio_url=req.lm_studio_url,
     )
-    report.findings.extend(dyn_findings)
-    report.tools = discovered_tools
-    report.tool_count = len(discovered_tools)
-
-    # 3. Description Analyzer
-    desc_analyzer = DescriptionAnalyzer(use_lm_studio=lm_active, lm_studio_url=req.lm_studio_url)
-    for t in discovered_tools:
-        report.findings.extend(desc_analyzer.analyze_tool(t))
-
-    # 4. Pin-and-Diff Rug-Pull Check
-    pin_store = PinStore()
-    if req.pin_baseline and discovered_tools:
-        pin_store.pin_server(eff_id, discovered_tools, notes="Approved baseline via Web UI")
-
-    rug_pull = pin_store.diff_server(eff_id, discovered_tools)
-    if rug_pull.detected:
-        report.rug_pull_detected = True
-        report.rug_pull_details = rug_pull
-        report.findings.extend(rug_pull.findings)
-
-    report.calculate_score()
+    pipeline = SecurityAuditPipeline(config)
+    res = await pipeline.execute_full_pipeline()
+    report = res.report
+    discovered_tools = report.tools or []
+    traces = res.traces
 
     # Convert traces to serializable format
     serializable_traces = [

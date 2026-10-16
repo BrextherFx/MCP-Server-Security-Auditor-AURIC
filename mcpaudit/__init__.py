@@ -12,3 +12,12 @@ __license__ = "MIT"
 __author__ = "Saad Momin, Sawez Farjad, Security Team"
 __email__ = "security@brextherfx.site"
 
+from mcpaudit.pipeline import SecurityAuditPipeline, PipelineConfig, PipelineResult
+
+__all__ = [
+    "SecurityAuditPipeline",
+    "PipelineConfig",
+    "PipelineResult",
+    "__version__",
+]
+

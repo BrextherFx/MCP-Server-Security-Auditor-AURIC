@@ -52,6 +52,10 @@
         </div>
       </div>
       <div class="flex items-center space-x-3">
+        <span id="lmStudioBadge" class="text-xs bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 rounded-full font-mono flex items-center gap-1.5" title="LM Studio Local LLM Connection">
+          <span id="lmStudioDot" class="inline-block w-2 h-2 rounded-full bg-slate-500"></span>
+          <span id="lmStudioText">LM Studio: Checking...</span>
+        </span>
         <button onclick="openLiveDemoModal()" class="px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
           <span>⚡</span> Live Rug-Pull Demo Studio
         </button>
@@ -85,7 +89,15 @@
           </button>
         </div>
       </div>
-      <p id="targetDescription" class="text-xs text-slate-400 italic"></p>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pt-2 border-t border-slate-800">
+        <p id="targetDescription" class="text-xs text-slate-400 italic"></p>
+        <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white transition">
+          <input type="checkbox" id="useLMStudioCheck" checked class="rounded border-slate-700 bg-slate-900 text-purple-500 focus:ring-purple-400">
+          <span class="flex items-center gap-1.5 font-medium">
+            <span class="text-purple-400">🤖</span> Enable LM Studio Deep AI Code Analysis
+          </span>
+        </label>
+      </div>
     </div>
 
     <!-- Rug-Pull Alert Banner (Conditional) -->
@@ -328,13 +340,15 @@
       scanBtn.disabled = true;
       spinner.classList.remove('hidden');
 
+      const useLM = document.getElementById('useLMStudioCheck')?.checked ?? true;
       try {
         const res = await fetch('/api/scan', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             server_path: path,
-            pin_baseline: pinBaseline
+            pin_baseline: pinBaseline,
+            use_lm_studio: useLM
           })
         });
 
@@ -558,14 +572,30 @@
       window.open(`/api/reports/markdown?server_path=${encodeURIComponent(path)}`, '_blank');
     }
 
-    function downloadSarif() {
-      const path = document.getElementById('serverPathInput').value;
-      window.open(`/api/reports/sarif?server_path=${encodeURIComponent(path)}`, '_blank');
+    async function checkLMStudio() {
+      try {
+        const res = await fetch('/api/lmstudio/status');
+        const data = await res.json();
+        const dot = document.getElementById('lmStudioDot');
+        const text = document.getElementById('lmStudioText');
+        const badge = document.getElementById('lmStudioBadge');
+        if (data.connected) {
+          dot.className = "inline-block w-2 h-2 rounded-full bg-emerald-400";
+          text.innerText = `LM Studio: ${data.active_model || 'Online'}`;
+          badge.className = "text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
+        } else {
+          dot.className = "inline-block w-2 h-2 rounded-full bg-slate-500";
+          text.innerText = "LM Studio: Offline";
+          badge.className = "text-xs bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 rounded-full font-mono flex items-center gap-1.5";
+        }
+      } catch (e) {}
     }
 
     // Initialize
     loadServers();
     loadPins();
+    checkLMStudio();
+    setInterval(checkLMStudio, 10000);
   </script>
 </body>
 </html>

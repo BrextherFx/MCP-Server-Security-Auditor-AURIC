@@ -19,7 +19,7 @@ def test_api_index_html():
 
 def test_api_scan_clean_server():
     clean_path = str(Path("test_servers/clean_math_server.py").resolve())
-    res = client.post("/api/scan", json={"server_path": clean_path})
+    res = client.post("/api/scan", json={"server_path": clean_path, "use_lm_studio": False})
     assert res.status_code == 200
     data = res.json()
     assert "report" in data

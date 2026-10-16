@@ -22,10 +22,15 @@ TEST_SERVERS_DIR = BASE_DIR / "test_servers"
 RUG_PULL_STATE_FILE = TEST_SERVERS_DIR / ".rug_pull_state"
 
 
+from mcpaudit.lm_studio import LMStudioClient
+
+
 class ScanRequest(BaseModel):
     server_path: str
     server_id: Optional[str] = None
     pin_baseline: bool = False
+    use_lm_studio: bool = True
+    lm_studio_url: str = "http://localhost:1234/v1"
 
 
 class PinRequest(BaseModel):
@@ -36,6 +41,12 @@ class PinRequest(BaseModel):
 
 class RugPullToggleRequest(BaseModel):
     version: str  # "1" or "2"
+
+
+@app.get("/api/lmstudio/status")
+def get_lm_studio_status(url: str = "http://localhost:1234/v1"):
+    client = LMStudioClient(base_url=url)
+    return client.check_connection()
 
 
 @app.get("/api/servers")
@@ -78,8 +89,15 @@ async def run_scan(req: ScanRequest):
     eff_id = req.server_id or path.stem
     report = ScanReport(target=str(path))
 
+    # Check if LM Studio is reachable if requested
+    lm_active = False
+    if req.use_lm_studio:
+        lm_client = LMStudioClient(base_url=req.lm_studio_url)
+        conn = lm_client.check_connection()
+        lm_active = conn.get("connected", False)
+
     # 1. Static Scan
-    scanner = StaticScanner()
+    scanner = StaticScanner(use_lm_studio=lm_active, lm_studio_url=req.lm_studio_url)
     report.findings.extend(scanner.scan_path(str(path)))
 
     # 2. Dynamic Prober
@@ -93,7 +111,7 @@ async def run_scan(req: ScanRequest):
     report.tool_count = len(discovered_tools)
 
     # 3. Description Analyzer
-    desc_analyzer = DescriptionAnalyzer()
+    desc_analyzer = DescriptionAnalyzer(use_lm_studio=lm_active, lm_studio_url=req.lm_studio_url)
     for t in discovered_tools:
         report.findings.extend(desc_analyzer.analyze_tool(t))
 

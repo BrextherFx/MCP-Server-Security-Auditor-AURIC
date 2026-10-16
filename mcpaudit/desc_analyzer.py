@@ -77,10 +77,21 @@ INJECTION_DIRECTIVES = [
 ZERO_WIDTH_CHARS = ["\u200b", "\u200c", "\u200d", "\ufeff", "\u202a", "\u202e"]
 
 
+from mcpaudit.lm_studio import LMStudioClient
+
+
 class DescriptionAnalyzer:
-    def __init__(self, ollama_url: str = "http://localhost:11434", ollama_model: str = "qwen2.5:7b"):
+    def __init__(
+        self,
+        ollama_url: str = "http://localhost:11434",
+        ollama_model: str = "qwen2.5:7b",
+        use_lm_studio: bool = False,
+        lm_studio_url: str = "http://localhost:1234/v1",
+    ):
         self.ollama_url = ollama_url
         self.ollama_model = ollama_model
+        self.use_lm_studio = use_lm_studio
+        self.lm_studio_client = LMStudioClient(base_url=lm_studio_url) if use_lm_studio else None
         self._finding_count = 0
 
     def _next_id(self, prefix: str = "POISON") -> str:
@@ -115,6 +126,17 @@ class DescriptionAnalyzer:
 
         # 4. Check for Semantic Discrepancy (e.g. calculator doing shell/network)
         findings.extend(self._check_semantic_discrepancy(tool))
+
+        # 5. Open-Weight Model Analysis via LM Studio
+        if self.use_lm_studio and self.lm_studio_client:
+            llm_finding = self.lm_studio_client.analyze_tool_description(tool)
+            if llm_finding:
+                findings.append(llm_finding)
+
+        # 6. Optional Ollama analysis
+        ollama_finding = self.analyze_with_ollama(tool)
+        if ollama_finding:
+            findings.append(ollama_finding)
 
         return findings
 

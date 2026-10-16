@@ -306,9 +306,14 @@ class PythonASTVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+from mcpaudit.lm_studio import LMStudioClient
+
+
 class StaticScanner:
-    def __init__(self):
+    def __init__(self, use_lm_studio: bool = False, lm_studio_url: str = "http://localhost:1234/v1"):
         self._finding_count = 0
+        self.use_lm_studio = use_lm_studio
+        self.lm_studio_client = LMStudioClient(base_url=lm_studio_url) if use_lm_studio else None
 
     def _next_id(self, prefix: str = "STAT") -> str:
         self._finding_count += 1
@@ -336,6 +341,11 @@ class StaticScanner:
         # 3. JS / TS Pattern Analysis
         if path.suffix.lower() in [".js", ".ts", ".mjs", ".cjs"]:
             findings.extend(self._scan_javascript(file_path, lines))
+
+        # 4. Deep LLM Semantic Code Analysis via LM Studio
+        if self.use_lm_studio and self.lm_studio_client:
+            llm_findings = self.lm_studio_client.analyze_code(content, file_path)
+            findings.extend(llm_findings)
 
         return findings
 

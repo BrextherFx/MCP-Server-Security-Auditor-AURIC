@@ -39,6 +39,9 @@ def _run_async(coro):
     return asyncio.run(coro)
 
 
+from mcpaudit.lm_studio import LMStudioClient
+
+
 @app.command()
 def scan(
     server_path: str = typer.Argument(..., help="Path to MCP server file or directory (e.g. server.py)"),
@@ -48,9 +51,22 @@ def scan(
     output_sarif: Optional[str] = typer.Option(None, "--sarif", help="Path to write SARIF 2.1.0 report"),
     output_json: Optional[str] = typer.Option(None, "--json", help="Path to write JSON report"),
     skip_dynamic: bool = typer.Option(False, "--skip-dynamic", help="Skip dynamic probing"),
+    use_lm_studio: bool = typer.Option(True, "--lm-studio/--no-lm-studio", help="Enable LM Studio local LLM code analysis"),
+    lm_studio_url: str = typer.Option("http://localhost:1234/v1", "--lm-url", help="LM Studio API base URL"),
 ):
     """Run full comprehensive audit: Static Analysis + Description Analysis + Dynamic Probing + Rug-Pull Diff."""
     console.print(f"[bold green]🔍 Starting MCP Security Audit on:[/bold green] [cyan]{server_path}[/cyan]...\n")
+
+    # Check LM Studio connectivity
+    lm_active = False
+    if use_lm_studio:
+        lm_client = LMStudioClient(base_url=lm_studio_url)
+        conn = lm_client.check_connection()
+        if conn["connected"]:
+            lm_active = True
+            console.print(f"[bold green]🤖 LM Studio Connected:[/bold green] Active Model: [cyan]{conn['active_model']}[/cyan]")
+        else:
+            console.print("[dim]🤖 LM Studio not running on port 1234, using rule engine.[/dim]")
 
     report = ScanReport(target=server_path)
     path = Path(server_path)
@@ -58,7 +74,7 @@ def scan(
 
     # 1. Static Analysis
     console.print("[bold blue]1/4 Running Static Security Scanner...[/bold blue]")
-    static_scanner = StaticScanner()
+    static_scanner = StaticScanner(use_lm_studio=lm_active, lm_studio_url=lm_studio_url)
     static_findings = static_scanner.scan_path(str(path))
     report.findings.extend(static_findings)
     console.print(f"    ↳ Found {len(static_findings)} static issue(s).")
@@ -81,7 +97,7 @@ def scan(
 
     # 3. Description & Prompt Injection Analysis
     console.print("[bold blue]3/4 Analyzing Tool Descriptions for Prompt Injection & Tool Poisoning...[/bold blue]")
-    desc_analyzer = DescriptionAnalyzer()
+    desc_analyzer = DescriptionAnalyzer(use_lm_studio=lm_active, lm_studio_url=lm_studio_url)
     desc_findings: List[Finding] = []
     for tool in tools_discovered:
         desc_findings.extend(desc_analyzer.analyze_tool(tool))
@@ -120,9 +136,19 @@ def scan(
 @app.command()
 def static(
     path: str = typer.Argument(..., help="Path to file or directory to scan statically"),
+    use_lm_studio: bool = typer.Option(True, "--lm-studio/--no-lm-studio", help="Enable LM Studio local LLM code analysis"),
+    lm_studio_url: str = typer.Option("http://localhost:1234/v1", "--lm-url", help="LM Studio API base URL"),
 ):
     """Run static security scanner on source code (command injection, deserialization, secrets, file/network)."""
-    scanner = StaticScanner()
+    lm_active = False
+    if use_lm_studio:
+        lm_client = LMStudioClient(base_url=lm_studio_url)
+        conn = lm_client.check_connection()
+        if conn["connected"]:
+            lm_active = True
+            console.print(f"[bold green]🤖 LM Studio Connected:[/bold green] Active Model: [cyan]{conn['active_model']}[/cyan]")
+
+    scanner = StaticScanner(use_lm_studio=lm_active, lm_studio_url=lm_studio_url)
     findings = scanner.scan_path(path)
     report = ScanReport(target=path, findings=findings)
     engine = ReportEngine()

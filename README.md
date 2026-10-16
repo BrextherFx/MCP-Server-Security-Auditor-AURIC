@@ -8,10 +8,6 @@
 
 A defense-in-depth security auditor and automated remediation engine for **Model Context Protocol (MCP)** servers. It intercepts, audits, and fixes MCP servers before agents trust them, protecting against **tool poisoning**, **command injection**, **unsafe deserialization**, **hardcoded secrets**, **unnecessary file/network access**, and **malicious rug pulls**.
 
-> [!TIP]
-> 📊 **Preparing a Hackathon Pitch / Demo?**
-> A complete slide-by-slide PowerPoint blueprint, speaker notes, Docker deployment walkthrough, and judge Q&A guide has been created in [**`PRESENTATION_GUIDE.md`**](file:///C:/Users/thril/Desktop/Hackthon/PRESENTATION_GUIDE.md).
-
 ---
 
 ## 🚀 Key Features

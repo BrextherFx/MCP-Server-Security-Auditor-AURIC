@@ -3,9 +3,15 @@ import shutil
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
-import boto3
-from botocore.exceptions import ClientError, NoCredentialsError
-
+try:
+    import boto3
+    from botocore.exceptions import ClientError, NoCredentialsError
+    HAS_BOTO3 = True
+except ImportError:
+    boto3 = None
+    ClientError = Exception
+    NoCredentialsError = Exception
+    HAS_BOTO3 = False
 
 from dotenv import load_dotenv
 
@@ -58,6 +64,11 @@ class S3StorageManager:
 
     def _init_client(self):
         """Initializes boto3 client if credentials or default profile exist."""
+        if not HAS_BOTO3 or boto3 is None:
+            self._s3_client = None
+            self._is_live_aws = False
+            return
+
         try:
             kwargs: Dict[str, Any] = {"region_name": self.region_name}
             if self.access_key and self.secret_key:

@@ -16,18 +16,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Set working directory
 WORKDIR /app
 
-# Copy dependency definition
-COPY pyproject.toml .
-
-# Install dependencies and project in editable mode
-RUN pip install --upgrade pip && \
-    pip install -e .
+# Copy dependency definition and documentation needed for build
+COPY pyproject.toml README.md ./
 
 # Copy application source code and test servers
 COPY mcpaudit/ mcpaudit/
 COPY test_servers/ test_servers/
 COPY run_demo.py .
 COPY .env.example .
+
+# Install dependencies and project in editable mode
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install --no-build-isolation -e .
 
 # Create volume mount directories
 RUN mkdir -p /app/s3_bucket_storage /app/reports

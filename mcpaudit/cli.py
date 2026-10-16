@@ -176,6 +176,7 @@ def static(
     path: str = typer.Argument(..., help="Path to file or directory to scan statically"),
     use_lm_studio: bool = typer.Option(True, "--lm-studio/--no-lm-studio", help="Enable LM Studio local LLM code analysis"),
     lm_studio_url: str = typer.Option("http://localhost:1234/v1", "--lm-url", help="LM Studio API base URL"),
+    show_solutions: bool = typer.Option(True, "--solutions/--no-solutions", help="Display actionable remediation and code fixes"),
 ):
     """Run static security scanner on source code (command injection, deserialization, secrets, file/network)."""
     lm_active = False
@@ -190,7 +191,7 @@ def static(
     findings = scanner.scan_path(path)
     report = ScanReport(target=path, findings=findings)
     engine = ReportEngine()
-    engine.print_terminal_summary(report)
+    engine.print_terminal_summary(report, show_solutions=show_solutions)
 
 
 @app.command()

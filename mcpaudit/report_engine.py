@@ -23,7 +23,7 @@ class ReportEngine:
     def __init__(self):
         self.console = Console(force_terminal=True, legacy_windows=False)
 
-    def print_terminal_summary(self, report: ScanReport):
+    def print_terminal_summary(self, report: ScanReport, show_solutions: bool = True):
         report.calculate_score()
 
         # Grade color
